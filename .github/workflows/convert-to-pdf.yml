@@ -24,7 +24,7 @@ jobs:
           image_import: ./labs-sources/images
           # Default is true, can set to false to only get PDF files
           build_html: false
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: labs-sources
           path: labs-exported
