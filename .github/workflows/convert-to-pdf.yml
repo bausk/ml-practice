@@ -28,3 +28,16 @@ jobs:
         with:
           name: labs-sources
           path: labs-exported
+      - name: Commit files
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add labs-exported/*.pdf
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "Generate PDF file"
+          fi
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
