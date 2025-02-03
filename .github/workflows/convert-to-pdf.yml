@@ -1,5 +1,8 @@
 name: Docs to PDF
 # This workflow is triggered on pushes to the repository.
+permissions:
+  contents: write
+
 on:
   push:
     branches:
@@ -15,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
       - uses: BaileyJM02/markdown-to-pdf@v1.2.0
         with:
           input_dir: labs-sources
@@ -24,18 +28,14 @@ jobs:
           image_import: ./labs-sources/images
           # Default is true, can set to false to only get PDF files
           build_html: false
-      - uses: actions/upload-artifact@v4
-        with:
-          name: labs-sources
-          path: labs-exported
-      - name: Commit files
+
+      - name: Commit PDF files
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add labs-exported/*.pdf
-          if ! git diff-index --quiet HEAD; then
-            git commit -m "Generate PDF file"
-          fi
+          git add labs-exported/
+          git commit -m "Auto-generate PDFs from markdown" || echo "No changes to commit"
+          
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
