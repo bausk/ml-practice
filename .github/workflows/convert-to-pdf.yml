@@ -22,7 +22,7 @@ jobs:
       - uses: BaileyJM02/markdown-to-pdf@v1.2.0
         with:
           input_dir: labs-sources
-          output_dir: labs-exported
+          output_dir: labs-exported/
           images_dir: labs-sources/images
           # for example <img src="./images/file-name.png">
           image_import: ./labs-sources/images
