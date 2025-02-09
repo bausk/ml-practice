@@ -6,34 +6,33 @@ async function activateXR(): Promise<void> {
     const canvas = document.createElement("canvas");
     document.body.appendChild(canvas);
     
-    const gl = canvas.getContext("webgl2", {xrCompatible: true});
+    const gl = canvas.getContext("", {xrCompatible: true});
     if (!gl) throw new Error("WebGL not supported");
 
-    const scene = new THREE.Scene();
+    // initialize scene
+    const scene = null;
 
+    // initialize materials
     const materials = [
         new THREE.MeshBasicMaterial({color: 0xff0000}),
-        new THREE.MeshBasicMaterial({color: 0x0000ff}),
-        new THREE.MeshBasicMaterial({color: 0x00ff00}),
-        new THREE.MeshBasicMaterial({color: 0xff00ff}),
-        new THREE.MeshBasicMaterial({color: 0x00ffff}),
-        new THREE.MeshBasicMaterial({color: 0xffff00})
+        // ...
     ];
 
-    const cube = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), materials);
+    // initialize cube
+    const cube = null;
+    // set cube position
     cube.position.set(1, 1, 1);
+    // add cube to scene
     scene.add(cube);
 
-    const renderer = new THREE.WebGLRenderer({
-        alpha: true,
-        preserveDrawingBuffer: true,
-        canvas: canvas,
-        context: gl
-    });
-    renderer.autoClear = false;
+    
+    // initialize renderer
+    const renderer = null;
+    // disable renderer auto clear
 
-    const camera = new THREE.PerspectiveCamera();
-    camera.matrixAutoUpdate = false;
+    // initialize camera
+    const camera = null;
+    // disable camera matrix update
 
     if (!navigator.xr) {
         throw new Error("WebXR is not supported by your browser");
@@ -55,9 +54,10 @@ async function activateXR(): Promise<void> {
         }
     );
 
-    session.updateRenderState({
-        baseLayer: new XRWebGLLayer(session, gl)
-    });
+    // initialize XRWebGLLayer
+    const baseLayer = null;
+    // update render state
+    // session.???
 
     const referenceSpaceTypes: XRReferenceSpaceType[] = [
         'local',
@@ -69,9 +69,12 @@ async function activateXR(): Promise<void> {
 
     let referenceSpace: XRReferenceSpace | null = null;
 
+    // observe how reference space types and request reference space
+    // are applied to the scene
     for (const spaceType of referenceSpaceTypes) {
         try {
-            referenceSpace = await session.requestReferenceSpace(spaceType);
+            // request reference space
+            referenceSpace = null;
             console.log('Reference space established:', spaceType);
             break;
         } catch(e) {
