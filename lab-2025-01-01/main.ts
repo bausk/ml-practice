@@ -87,6 +87,9 @@ async function activateXR(): Promise<void> {
     if (!referenceSpace) {
         throw new Error('No reference space could be established');
     }
+
+    // Implement onXRFrame
+    session.requestAnimationFrame(); // TODO: Implement correct call
 }
 
 // Make the function available globally
