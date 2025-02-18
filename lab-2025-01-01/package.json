@@ -3,13 +3,18 @@
 	"version": "1.0.0",
 	"description": "WebXR demo project",
 	"scripts": {
-		"start": "",
-		"build": ""
+		"start": "pnpm build --watch=forever & pnpm serve .",
+		"build": "esbuild main.ts --bundle --outfile=dist/main.js --format=esm"
 	},
 	"devDependencies": {
-		"typescript": "^5.3.3"
+		"@types/three": "^0.172.0",
+		"@types/webxr": "^0.5.10",
+		"typescript": "^5.3.3",
+		"esbuild": "^0.20.1",
+		"serve": "^14.2.1"
 	},
 	"packageManager": "pnpm@10.2.1+sha512.398035c7bd696d0ba0b10a688ed558285329d27ea994804a52bad9167d8e3a72bcb993f9699585d3ca25779ac64949ef422757a6c31102c12ab932e5cbe5cc92",
 	"dependencies": {
+		"three": "^0.172.0"
 	}
 }
