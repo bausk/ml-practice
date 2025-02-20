@@ -6,7 +6,7 @@ async function activateXR(): Promise<void> {
     const canvas = document.createElement("canvas");
     document.body.appendChild(canvas);
     
-    const gl = canvas.getContext("", {xrCompatible: true});
+    const gl = canvas.getContext("webgl2", {xrCompatible: true});
     if (!gl) throw new Error("WebGL not supported");
 
     // FIX THIS:
@@ -86,6 +86,7 @@ async function activateXR(): Promise<void> {
     for (const spaceType of referenceSpaceTypes) {
         try {
             // request reference space
+            // FIX THIS:
             referenceSpace = null;
             console.log('Reference space established:', spaceType);
             break;
