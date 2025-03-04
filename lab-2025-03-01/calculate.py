@@ -11,24 +11,21 @@ import numpy as np
 
 from acquisition.video_input import get_video_input
 from postprocessing.generational_sparse_hud import GenerationalSparseHUD
-from postprocessing.sparse_hud import IdentityHUD, SparseLinesHUD
-from postprocessing.stitch_hud import StitchHUD
+from postprocessing.sparse_hud import SparseLinesHUD
 from postprocessing.videofile_write import MP4VideoWriter
 from postprocessing.image_hud import ImageHUD
 from processing import optical_flow
 from processing.generational_motion_tracking import GenerationalVectorInference
 from processing.generational_sparse_flow import GenerationalLKFlow
-from processing.image_stitching import blend_images, crop_lower_half, crop_upper_half, detect_and_match_features, estimate_homography, warp_images
-from processing.motion_tracking import CompoundVectorInferenceSparse, StaticVectorInferenceSparse
-from processing.pose_tracking import CompoundPoseInference
+from processing.motion_tracking import CompoundVectorInferenceSparse
+
 
 
 usage_text = '''
-Hit following to switch to:
-1 - Dense optical flow by HSV color image (default);
+Переключення між режимами:
+1 - Dense optical flow by HSV color image;
 2 - Dense optical flow by lines;
-3 - Dense optical flow by warped image;
-4 - Lucas-Kanade method.
+3 - Generational Lucas-Kanade method for motion vector inference.
 
 Hit 's' to save image.
 
@@ -55,6 +52,9 @@ def main(image_path: Optional[str], crop: Optional[float], maxwidth: Optional[in
 
     visuzalizer = ImageHUD()
     video_writer = MP4VideoWriter(file_name_without_extension)
+    
+    # Current visualization mode (default: Lucas-Kanade method)
+    current_mode = 3
 
     # FIX THIS
     create_default_lk_flow = None
@@ -64,36 +64,22 @@ def main(image_path: Optional[str], crop: Optional[float], maxwidth: Optional[in
         undistort=False
     )
 
-    inference_pipelines = [
-        # [
-        #     optical_flow.DenseOpticalFlowByLines(),
-        #     [
-        #         CompoundVectorInferenceDense(percentile=80)
-        #     ],
-        #     DenseLinesHUD(step=32),
-        # ],
+    # Create dense optical flow processors
+    dense_flow_hsv = optical_flow.DenseOpticalFlowByHSV()
+    dense_flow_lines = optical_flow.DenseOpticalFlowByLines()
+    
+    # Create Lucas-Kanade pipeline
+    lk_pipeline = [
+        GenerationalLKFlow(create_default_lk_flow),
         [
-            GenerationalLKFlow(create_default_lk_flow),
-            [
-                GenerationalVectorInference(CompoundTrackerInstantiator),
-            ],
-            GenerationalSparseHUD(),
+            GenerationalVectorInference(CompoundTrackerInstantiator),
         ],
-        # [
-        #     create_default_lk_flow(),
-        #     [
-        #         CompoundVectorInferenceSparse(),
-        #         CompoundVectorInferenceSparse(estimator_algo='ICP'),
-        #         StaticVectorInferenceSparse(),
-        #         StaticVectorInferenceSparse(estimator_algo='ICP'),
-        #         # CompoundPoseInference(50),
-        #     ],
-        #     SparseLinesHUD(),
-        # ],
+        GenerationalSparseHUD(),
     ]
 
     frame_count = 0
     unstitched_count = 0
+    prev_frame = None
 
     while True:
         frame = camera.capture()
@@ -104,14 +90,57 @@ def main(image_path: Optional[str], crop: Optional[float], maxwidth: Optional[in
             frame = cv2.flip(frame, 1)
 
         visuzalizer.setImage(np.copy(frame))
-        color_position = 1
-
-        for processor, vector_inferences, inference_hud in inference_pipelines:
-            inference_hud: SparseLinesHUD
+        
+        # Process based on current mode
+        if current_mode == 1:  # Dense optical flow by HSV
+            if prev_frame is not None:
+                # For HSV visualization, we need to convert the flow to a color image
+                _, flow = dense_flow_hsv.apply(frame)
+                # Convert flow to RGB visualization
+                if flow is not None:
+                    # Create HSV image
+                    h, w = flow.shape[:2]
+                    hsv = np.zeros((h, w, 3), dtype=np.uint8)
+                    hsv[..., 1] = 255  # Saturation is always max
+                    
+                    # Calculate magnitude and angle
+                    mag, ang = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+                    # Normalize magnitude to 0-255
+                    hsv[..., 0] = ang * 180 / np.pi / 2  # Hue is angle
+                    hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)  # Value is magnitude
+                    
+                    # Convert to BGR
+                    flow_rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+                    visuzalizer.frame = flow_rgb
+            
+        elif current_mode == 2:  # Dense optical flow by lines
+            if prev_frame is not None:
+                # For line visualization, we'll draw the flow on a copy of the original frame
+                _, flow = dense_flow_lines.apply(frame)
+                if flow is not None:
+                    # Create a copy of the frame to draw on
+                    flow_vis = frame.copy()
+                    
+                    # Draw flow lines
+                    h, w = flow.shape[:2]
+                    step = 16  # Draw a line every 16 pixels
+                    for y in range(0, h, step):
+                        for x in range(0, w, step):
+                            fx, fy = flow[y, x].flatten()
+                            # Only draw significant movements
+                            if abs(fx) > 1 or abs(fy) > 1:
+                                cv2.line(flow_vis, (x, y), (int(x + fx), int(y + fy)), (0, 255, 0), 1)
+                                cv2.circle(flow_vis, (x, y), 1, (0, 0, 255), -1)
+                    
+                    visuzalizer.frame = flow_vis
+            
+        elif current_mode == 3:  # Lucas-Kanade method
+            processor, vector_inferences, inference_hud = lk_pipeline
             _, processor_result = processor.apply(frame)
-
+            
             visuzalizer.frame = inference_hud.draw_mask(visuzalizer, processor_result)
-
+            
+            color_position = 1
             for vector_inference in vector_inferences:
                 vector_results = vector_inference.infer(processor_result)
                 match vector_results:
@@ -124,17 +153,21 @@ def main(image_path: Optional[str], crop: Optional[float], maxwidth: Optional[in
                         'subvector_results': subvectors
                     }:
                         visuzalizer.draw_central_vector(result, color_position)
-                        # inference_hud.draw_subvectors(subvectors)
                 text = vector_inference.get_title_message()
                 visuzalizer.write_uppertext(text, color_position)
                 text = vector_inference.get_parameter_message()
                 visuzalizer.write_lowertext(text, color_position)
-
+                
                 color_position += 1
 
-
+        # Display current mode
+        visuzalizer.write_uppertext(f"Mode: {current_mode}", 0)
+        
         visuzalizer.render()
         video_writer.write_frame(visuzalizer.frame)
+        
+        # Store current frame for next iteration
+        prev_frame = frame.copy()
 
         frame_count += 1
         unstitched_count += 1
@@ -157,6 +190,15 @@ def main(image_path: Optional[str], crop: Optional[float], maxwidth: Optional[in
         elif key == ord('f'):   # save
             flipImage = not flipImage
             print("Flip image: " + {True: "ON", False: "OFF"}.get(flipImage))
+        elif key == ord('1'):   # Mode 1: Dense optical flow by HSV
+            current_mode = 1
+            print("Switched to Mode 1: Dense optical flow by HSV color image")
+        elif key == ord('2'):   # Mode 2: Dense optical flow by lines
+            current_mode = 2
+            print("Switched to Mode 2: Dense optical flow by lines")
+        elif key == ord('3'):   # Mode 3: Lucas-Kanade method
+            current_mode = 3
+            print("Switched to Mode 3: Generational Lucas-Kanade method")
 
     ## finish
     video_writer.cleanup()
