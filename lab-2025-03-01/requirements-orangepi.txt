@@ -1,0 +1,6 @@
+opencv-python
+numpy
+click
+debugpy
+python-dotenv
+requests
