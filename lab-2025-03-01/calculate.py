@@ -11,13 +11,16 @@ import numpy as np
 
 from acquisition.video_input import get_video_input
 from postprocessing.generational_sparse_hud import GenerationalSparseHUD
-from postprocessing.sparse_hud import SparseLinesHUD
+from postprocessing.sparse_hud import IdentityHUD, SparseLinesHUD
+from postprocessing.stitch_hud import StitchHUD
 from postprocessing.videofile_write import MP4VideoWriter
 from postprocessing.image_hud import ImageHUD
 from processing import optical_flow
 from processing.generational_motion_tracking import GenerationalVectorInference
 from processing.generational_sparse_flow import GenerationalLKFlow
-from processing.motion_tracking import CompoundVectorInferenceSparse
+from processing.image_stitching import blend_images, crop_lower_half, crop_upper_half, detect_and_match_features, estimate_homography, warp_images
+from processing.motion_tracking import CompoundVectorInferenceSparse, StaticVectorInferenceSparse
+from processing.pose_tracking import CompoundPoseInference
 
 
 usage_text = '''
@@ -89,6 +92,8 @@ def main(image_path: Optional[str], crop: Optional[float], maxwidth: Optional[in
         # ],
     ]
 
+    frame_count = 0
+    unstitched_count = 0
 
     while True:
         frame = camera.capture()

@@ -5,3 +5,4 @@ click
 debugpy
 python-dotenv
 requests
+scikit-learn

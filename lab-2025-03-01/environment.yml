@@ -1,4 +1,4 @@
-name: test1
+name: lab-2025-03
 channels:
     - conda-forge
     - defaults
