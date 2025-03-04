@@ -11,16 +11,13 @@ import numpy as np
 
 from acquisition.video_input import get_video_input
 from postprocessing.generational_sparse_hud import GenerationalSparseHUD
-from postprocessing.sparse_hud import IdentityHUD, SparseLinesHUD
-from postprocessing.stitch_hud import StitchHUD
+from postprocessing.sparse_hud import SparseLinesHUD
 from postprocessing.videofile_write import MP4VideoWriter
 from postprocessing.image_hud import ImageHUD
 from processing import optical_flow
 from processing.generational_motion_tracking import GenerationalVectorInference
 from processing.generational_sparse_flow import GenerationalLKFlow
-from processing.image_stitching import blend_images, crop_lower_half, crop_upper_half, detect_and_match_features, estimate_homography, warp_images
-from processing.motion_tracking import CompoundVectorInferenceSparse, StaticVectorInferenceSparse
-from processing.pose_tracking import CompoundPoseInference
+from processing.motion_tracking import CompoundVectorInferenceSparse
 
 
 usage_text = '''
@@ -56,24 +53,8 @@ def main(image_path: Optional[str], crop: Optional[float], maxwidth: Optional[in
     visuzalizer = ImageHUD()
     video_writer = MP4VideoWriter(file_name_without_extension)
 
-    create_default_lk_flow = lambda: optical_flow.LucasKanadeOpticalFlow(
-        feature_params=dict(
-            maxCorners=100,
-            qualityLevel=0.2,
-            minDistance=15,
-            blockSize=7,
-            useHarrisDetector=False
-        ),
-        lk_params=dict(
-            winSize=(15, 15),
-            maxLevel=2,
-            criteria=(
-                cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
-                10,
-                0.03
-            )
-        ),
-    )
+    # FIX THIS
+    create_default_lk_flow = None
 
     CompoundTrackerInstantiator = lambda x: CompoundVectorInferenceSparse(
         initial_motion_vector=x,
