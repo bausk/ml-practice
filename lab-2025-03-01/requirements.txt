@@ -1,6 +1,5 @@
 opencv-python
 numpy
-picamera2
 click
 debugpy
 python-dotenv
