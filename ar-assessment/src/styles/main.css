@@ -1,0 +1,107 @@
+/* Main stylesheet for VR Competency Assessment */
+
+/* Import styles from the root CSS file */
+@import '../../styles.css';
+
+/* Additional styles specific to the application */
+
+/* Variables for consistent text styling */
+:root {
+    --text-spacing: 1px;
+    --heading-spacing: 1.5px;
+    --cyrillic-font-stack: 'PT Sans', 'Roboto', 'Noto Sans', Arial, sans-serif;
+}
+
+.warning-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-family: var(--cyrillic-font-stack);
+    letter-spacing: var(--text-spacing);
+    z-index: 1000;
+}
+
+/* HUD styles for VR */
+.vr-hud {
+    position: absolute;
+    width: 400px;
+    height: 300px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    pointer-events: none;
+    font-family: var(--cyrillic-font-stack);
+    letter-spacing: var(--text-spacing);
+}
+
+.vr-question {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    font-weight: 500;
+    font-family: var(--cyrillic-font-stack);
+    letter-spacing: var(--text-spacing);
+    word-spacing: 2px;
+}
+
+.vr-options {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.vr-option {
+    margin: 5px 0;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--cyrillic-font-stack);
+    letter-spacing: var(--text-spacing);
+    word-spacing: 2px;
+}
+
+.vr-option:hover, .vr-option.selected {
+    background-color: rgba(76, 201, 240, 0.3);
+}
+
+.vr-explanation {
+    margin-top: 15px;
+    font-style: italic;
+    font-family: var(--cyrillic-font-stack);
+    letter-spacing: var(--text-spacing);
+}
+
+/* Task zone indicators */
+.indicator-label {
+    font-size: 0.9em;
+    margin-top: 5px;
+    font-family: var(--cyrillic-font-stack);
+    letter-spacing: var(--text-spacing);
+}
+
+/* Score visualization */
+.score-visualization {
+    width: 100%;
+    height: 10px;
+    background-color: #ccc;
+    border-radius: 5px;
+    margin-top: 5px;
+    overflow: hidden;
+    font-family: var(--cyrillic-font-stack);
+}
+
+.score-bar {
+    height: 100%;
+    background-color: #4cc9f0;
+    transition: width 0.5s;
+} 
