@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VR Competency Assessment</title>
+    <!-- Add Google Fonts with Cyrillic support (updated for better width) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Updated to include wider font variants with better Cyrillic support -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans:wght@400;500;700&family=PT+Sans:wght@400;700&subset=cyrillic,cyrillic-ext&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="description" content="Virtual Reality Competency Assessment Application for Students">
+    <!-- Ensure WebXR is available -->
+    <script>
+        if (!navigator.xr) {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.body.innerHTML = '<div class="error-message">WebXR not available. Please use a compatible browser and device.</div>';
+            });
+        }
+    </script>
+    <style>
+        /* Add additional styles for font rendering */
+        body, input, button, textarea, select {
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h1>VR Competency Assessment</h1>
+        <p>Put on your VR headset and click the 'Enter VR' button to begin the assessment.</p>
+        <p class="instructions">Use the controllers to interact with the assessment zones and answer questions.</p>
+    </div>
+    
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>Loading VR Environment...</p>
+    </div>
+    
+    <div id="score-display" style="display: none;">
+        <h2>Assessment Results</h2>
+        <div id="scores-container"></div>
+        <div id="total-score"></div>
+    </div>
+
+    <!-- Scripts will be inserted by bundler at the end of body -->
+    <script type="module" src="./dist/bundle.js"></script>
+</body>
+</html> 
