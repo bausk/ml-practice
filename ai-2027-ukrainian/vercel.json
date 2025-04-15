@@ -1,11 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "**/*",
-      "use": "@vercel/static"
-    }
-  ],
+  "buildCommand": "echo 'Static site, no build step required'",
+  "outputDirectory": ".",
   "github": {
     "silent": true
   },
