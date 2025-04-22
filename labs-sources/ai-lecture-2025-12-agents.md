@@ -545,6 +545,7 @@ AI агенти представляють собою потужну парад�
 3. PromptingGuide.AI. (2025). [Few-shot prompting](https://www.promptingguide.ai/techniques/fewshot)
 4. Wikipedia. (2025). [Intelligent agent](https://en.wikipedia.org/wiki/Intelligent_agent)
 5. Wikipedia. (2025). [Multi-agent system](https://en.wikipedia.org/wiki/Multi-agent_system)
+6. LangChain Guide. (2025). [Multi-Agent Systems](https://langchain-ai.github.io/langgraph/concepts/multi_agent/)
 6. [Awesome MCP Servers](https://github.com/wong2/awesome-mcp-servers)
 7. [Awesome MCP Clients](https://github.com/punkpeye/awesome-mcp-clients)
 8. Ksenia Se. (2025). [What Is MCP, and Why Is Everyone Talking About It?](https://huggingface.co/blog/Kseniase/mcp)
