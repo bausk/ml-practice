@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://ai-2027-ukrainian.vercel.app/sitemap.xml 

@@ -1,4 +1,0 @@
-kivy
-numpy
-matplotlib
-kivy-garden.matplotlib
