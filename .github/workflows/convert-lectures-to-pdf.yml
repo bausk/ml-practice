@@ -1,0 +1,40 @@
+name: Lecture Notes to PDF
+# This workflow is triggered on pushes to the repository.
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'lectures-sources/**.md'
+      - 'lectures-sources/images/**'
+
+jobs:
+  converttopdf:
+    name: Build PDF
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: BaileyJM02/markdown-to-pdf@v1.2.0
+        with:
+          input_dir: lectures-sources
+          output_dir: lectures-exported/
+          images_dir: lectures-sources/images
+          image_import: ./images
+          build_html: false
+
+      - name: Commit PDF files
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add lectures-exported/
+          git commit -m "Auto-generate PDFs from lecture notes" || echo "No changes to commit"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
