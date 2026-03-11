@@ -1,0 +1,39 @@
+name: Publish Slides to GitHub Pages
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'lectures-sources/**-slides/**'
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy Slides
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload slides artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: lectures-sources/lecture-07-slides
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
