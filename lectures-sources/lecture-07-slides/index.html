@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Лекція 7: Згорткові нейронні мережі та комп'ютерний зір</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/theme/moon.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/plugin/highlight/monokai.css">
+  <style>
+    :root {
+      --accent: #3498db;
+      --accent2: #2ecc71;
+      --warn: #e74c3c;
+      --gold: #f39c12;
+    }
+    .reveal { font-size: 26px; }
+    .reveal h1 { font-size: 1.9em; color: #ecf0f1; }
+    .reveal h2 { font-size: 1.35em; color: #85c1e9; }
+    .reveal h3 { font-size: 1.1em; color: #aed6f1; }
+    .reveal p  { line-height: 1.5; }
+    .reveal ul  { line-height: 1.7; }
+    .reveal section img { max-height: 66vh; margin: 0 auto; display: block; border: none; box-shadow: none; }
+    .reveal pre { width: 100%; font-size: 0.72em; }
+    .reveal code { background: #1a1a2e; }
+
+    .cols   { display: flex; gap: 2em; align-items: flex-start; }
+    .cols > * { flex: 1; }
+    .box {
+      background: rgba(52, 152, 219, 0.15);
+      border-left: 4px solid var(--accent);
+      padding: 0.5em 1em;
+      margin: 0.5em 0;
+      border-radius: 4px;
+    }
+    .box.green  { background: rgba(46,204,113,0.12); border-color: var(--accent2); }
+    .box.red    { background: rgba(231, 76, 60, 0.12); border-color: var(--warn); }
+    .box.gold   { background: rgba(243,156,18,0.12); border-color: var(--gold); }
+    .tag {
+      display: inline-block;
+      padding: 0.15em 0.6em;
+      border-radius: 20px;
+      font-size: 0.75em;
+      font-weight: bold;
+      vertical-align: middle;
+    }
+    .tag.blue  { background: var(--accent); color: white; }
+    .tag.green { background: var(--accent2); color: #111; }
+    .footer    { font-size: 0.55em; color: #7f8c8d; margin-top: 1em; }
+    table th   { background: rgba(52,152,219,0.3); }
+    table td, table th { border: 1px solid #4a6fa5; padding: 0.4em 0.7em; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ═══════════════════════════════ SLIDE 1: TITLE ═══════════════════════════════ -->
+<section>
+  <h1>Згорткові нейронні мережі</h1>
+  <h2 style="color:#85c1e9; margin-top:0.2em;">та комп'ютерний зір</h2>
+  <br>
+  <p>Штучний інтелект в ігрових застосунках</p>
+  <p style="margin-top:1em;">Національний університет «Львівська Політехніка»</p>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 2: QUOTE ═══════════════════════════════ -->
+<section>
+  <p>Комп'ютерний зір — навчання моделі <strong>розуміти зображення:</strong><br>
+  що на ньому присутнє, в яких відношеннях до інших обʼєктів, з якими змінами.</p>
+  <br>
+  <p class="fragment"><strong>Зображення</strong> у широкому сенсі слова: дані, що зібрані з сенсорів реального світу або такі, що репрезентують вигаданий простір</p>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 3: APPLICATIONS ═══════════════════════════════ -->
+<section>
+  <h2>Застосування</h2>
+  <table style="width:100%; margin-top:0.5em;">
+    <thead><tr><th>Галузь</th><th>Приклади</th></tr></thead>
+    <tbody>
+      <tr class="fragment"><td>Робототехніка</td><td>Навігація роботів, маніпуляція об'єктами</td></tr>
+      <tr class="fragment"><td>Автономні системи</td><td>Виявлення пішоходів, ліній, знаків</td></tr>
+      <tr class="fragment"><td>Медицина</td><td>Інтерпретація результатів</td></tr>
+      <tr class="fragment"><td>Доступність</td><td>Навігація для незрячих (Google Guideline)</td></tr>
+      <tr class="fragment"><td>Ігри</td><td>QA-тестування, класифікація ассетів, NPC-зір</td></tr>
+      <tr class="fragment"><td>Навігація</td><td>Супутникові і картографічні задачі</td></tr>
+      <tr class="fragment"><td>Мілтех</td><td>Terminal Guidance AI</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Базові методи</h2>
+  <img src="img/segmentation.jpeg" alt="">
+</section>
+
+<section>
+  <h2>Автономні системи</h2>
+  <img src="img/Screenshot 2026-03-11 at 04.07.17.png" alt="">
+</section>
+
+<section>
+  <h2>Навігація і локалізація</h2>
+  <img src="img/image (7).png" alt="">
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 4: IMAGES ARE NUMBERS ═══════════════════════════════ -->
+<section>
+  <h2>Зображення — це числа</h2>
+  <img src="img/01_pixel_matrix.png" alt="Pixel matrix">
+  <p class="fragment box" style="margin-top:0.5em;">
+    Кожен піксель = ціле число від <strong>0</strong> (чорний) до <strong>255</strong> (білий)
+  </p>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 5: RGB ═══════════════════════════════ -->
+<section>
+  <h2>Кольорові зображення: RGB</h2>
+  <div class="cols">
+    <div>
+      <p><span style="color:#e74c3c;">■</span> <strong>R</strong>ed — червоний канал (0–255)</p>
+      <p><span style="color:#2ecc71;">■</span> <strong>G</strong>reen — зелений канал (0–255)</p>
+      <p><span style="color:#3498db;">■</span> <strong>B</strong>lue — синій канал (0–255)</p>
+      <br>
+      <p class="fragment">Кожне кольорове зображення — три накладені матриці</p>
+    </div>
+    <div class="fragment">
+      <p style="text-align:center;">Розмір RGB-зображення:</p>
+      <p style="font-size:1.4em; text-align:center;">$$H \times W \times 3$$</p>
+      <div class="box gold">
+        Фото 1080×1080 px ≈ <strong>3.5 мільйони чисел</strong><br>
+        — це вхідні дані для нейромережі
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 6: CV TASKS ═══════════════════════════════ -->
+<section>
+  <h2>Три "класичні" задачі комп'ютерного зору</h2>
+  <div class="cols" style="margin-top:0.7em;">
+    <div class="fragment box">
+      <h3>Класифікація</h3>
+      <p>Що на зображенні?</p>
+      <p style="font-size:0.8em;">Вихід — вектор імовірностей класів</p>
+    </div>
+    <div class="fragment box">
+      <h3>Детекція об'єктів</h3>
+      <p>Що і де?</p>
+      <p style="font-size:0.85em;"><em>Рамка (x, y, w, h) + клас для кожного об'єкта</em></p>
+    </div>
+    <div class="fragment box">
+      <h3>Сегментація</h3>
+      <p>Клас для кожного пікселя</p>
+      <p style="font-size:0.85em;"><em>«небо», «дорога», «авто», «пішохід»</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 7: FEATURE DETECTION ═══════════════════════════════ -->
+<section>
+  <h2>Ідея: знаходити характерні ознаки</h2>
+  <p>Об'єкти одного класу мають спільні візуальні ознаки (features):</p>
+  <div class="cols" style="margin-top:0.8em;">
+    <img src="img/ScreenshotFeatures.png" />
+  </div>
+  <p class="fragment" style="margin-top:1em;">
+    Підхід: вручну запрограмувати детектори цих ознак → класифікувати.<br>
+    <strong>Що може піти не так?</strong>
+  </p>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 8: MANUAL EXTRACTION PROBLEMS ═══════════════════════════════ -->
+<section>
+  <h2>Ручне виділення ознак: проблеми</h2>
+  <p style="margin-bottom:0.3em;"><code>Знання домену → Визначити ознаки → Класифікувати</code></p>
+  <p>Реальні зображення мінливі через природу цифрових даних:</p>
+  <div class="cols">
+    <ul>
+      <li class="fragment">Зміна ракурсу</li>
+      <li class="fragment">Зміна масштабу</li>
+      <li class="fragment">Деформації об'єкта</li>
+    </ul>
+    <ul>
+      <li class="fragment">Перекриття (occlusion)</li>
+      <li class="fragment">Різне освітлення</li>
+      <li class="fragment">Злиття з фоном</li>
+    </ul>
+  </div>
+  <div class="fragment box red" style="margin-top:0.8em;">
+    Вручну запрограмовані детектори — <strong>крихкі</strong> і <strong>не масштабуються</strong>.<br>
+    Потрібен підхід, де ознаки <em>вивчаються</em> із даних.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 9: FEATURE HIERARCHY ═══════════════════════════════ -->
+<section>
+  <h2>Рішення: ієрархія ознак, вивчена автоматично</h2>
+  <img src="img/08_feature_hierarchy.png" alt="Feature hierarchy">
+  <p class="fragment">Замість ручного визначення — нейромережа <strong>сама</strong> вивчає, що важливо</p>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 10: FC PROBLEM ═══════════════════════════════ -->
+<section>
+  <h2>Чому звичайна нейромережа не підходить?</h2>
+  <div class="cols">
+    <div>
+      <p><strong>Fully Connected (повнозв'язна)</strong> мережа:</p>
+      <p>кожен нейрон з'єднаний з кожним вхідним пікселем</p>
+      <br>
+      <p class="fragment">Зображення 224×224×3 = <strong>150 528</strong> вхідів<br>
+         × 1000 нейронів першого шару =</p>
+      <p class="fragment" style="font-size:1.3em; color:var(--warn); text-align:center;">
+        <strong>150 мільйонів ваг</strong><br>тільки в першому шарі!
+      </p>
+    </div>
+    <div class="fragment">
+      <div class="box red">❌ Занадто багато параметрів</div>
+      <div class="box red" style="margin-top:0.5em;">❌ Втрата просторової структури: мережа не знає, що пікселі-сусіди пов'язані</div>
+      <br>
+      <p><strong>Як використати просторову структуру зображення?</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 11: SPATIAL STRUCTURE ═══════════════════════════════ -->
+<section>
+  <h2>Рішення: локальні звʼязки + sliding window</h2>
+  <div class="box" style="font-size:1.1em; margin:0.8em 0;">
+    Замість з'єднання з <em>усіма</em> пікселями — нейрон читає лише <strong>маленький патч</strong>
+  </div>
+  <div class="fragment">
+    <img src="img/ScreenshotSlidingWindow.png" />
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 12: X OR X ═══════════════════════════════ -->
+<section>
+  <h2>Навіщо просторова інваріантність?</h2>
+  <img src="img/02_x_case.png" alt="X or X?">
+  <p class="fragment">Мережа повинна розпізнавати об'єкт незалежно від <strong>позиції, масштабу, деформації</strong></p>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 13: CONVOLUTION ═══════════════════════════════ -->
+<section>
+  <h2>Операція згортки (Convolution)</h2>
+  <img src="img/03_convolution.png" alt="Convolution operation">
+  <p class="fragment box" style="margin-top:0.5em;">
+    Зсув "фільтра" для кожного нового елемента → поелементне множення → сума → одне значення в <strong>карті (шарі) ознак</strong>
+  </p>
+</section>
+
+<section>
+  <h2>Приклад: детектор вертикального краю</h2>
+  <img src="img/ScreenshotEdgeConvolution.png" alt="Convolution operation">
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 14: 3 PRINCIPLES ═══════════════════════════════ -->
+<section>
+  <h2>Три принципи згортки</h2>
+  <div class="box" style="margin:0.6em 0;">
+    <strong>1. Локальні зв'язки</strong> — нейрон «бачить» лише невеликий патч, а не все зображення
+  </div>
+  <div class="fragment box" style="margin:0.6em 0;">
+    <strong>2. Спільні ваги (parameter sharing)</strong> — один фільтр застосовується до кожної позиції. Замість мільйонів ваг — тисячі
+  </div>
+  <div class="fragment box green" style="margin:0.6em 0;">
+    <strong>3. Множинні фільтри</strong> — різні фільтри виявляють різні ознаки.
+    Кожен фільтр → одна <em>карта ознак (feature map)</em>
+  </div>
+  <p class="fragment" style="margin-top:0.8em;">
+    Ваги фільтрів <strong>не задаються вручну</strong> — вони <em>вивчаються</em> через backpropagation
+  </p>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 15: FEATURE MAPS ═══════════════════════════════ -->
+<section>
+  <h2>Різні фільтри — різні карти ознак</h2>
+  <img src="img/04_feature_maps.png" alt="Feature maps">
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 16: CNN ARCH ═══════════════════════════════ -->
+<section>
+  <h2>Архітектура CNN</h2>
+  <img src="img/07_cnn_arch.png" alt="CNN architecture">
+  <p class="fragment" style="margin-top:0.4em;">
+    <span class="tag blue">Conv2D + ReLU + MaxPool</span> — повторюється N разів,
+    потім <span class="tag green">Flatten → Linear → Softmax</span>
+  </p>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 18: RELU ═══════════════════════════════ -->
+<section>
+  <h2>Нелінійність: ReLU</h2>
+  <img src="img/05_relu.png" alt="ReLU">
+  <p class="fragment box red" style="margin-top:0.4em;">
+    Без нелінійності — послідовність згорток = одна лінійна трансформація.<br>
+    ReLU дозволяє моделювати <strong>складні нелінійні залежності</strong>.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 19: POOLING ═══════════════════════════════ -->
+<section>
+  <h2>Пулінг: зменшення розміру + інваріантність</h2>
+  <img src="img/06_maxpool.png" alt="Max pooling">
+  <div class="cols fragment" style="margin-top:0.5em;">
+    <div class="box green">✅ Зменшує кількість параметрів у наступних шарах</div>
+    <div class="box green">✅ Часткова інваріантність до зсувів об'єкта</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 20: FEATURE LEARNING ═══════════════════════════════ -->
+<section>
+  <h2>Що вивчають шари глибокої CNN?</h2>
+  <table style="width:100%; margin-top:0.5em;">
+    <thead><tr><th>Шар</th><th>Що виявляє</th><th>Конкретні приклади</th></tr></thead>
+    <tbody>
+      <tr class="fragment"><td><strong>Conv 1</strong></td><td>Прості ознаки</td><td>Краї, лінії, плями, градієнти</td></tr>
+      <tr class="fragment"><td><strong>Conv 2</strong></td><td>Середні ознаки</td><td>Текстури, кути, прості форми</td></tr>
+      <tr class="fragment"><td><strong>Conv 3+</strong></td><td>Семантичні ознаки</td><td>Очі, вуха, колеса, вікна</td></tr>
+      <tr class="fragment"><td><strong>FC шари</strong></td><td>Глобальний опис</td><td>Клас об'єкта, його ймовірність</td></tr>
+    </tbody>
+  </table>
+  <div class="fragment box" style="margin-top:0.8em;">
+    Ваги всіх фільтрів вивчаються <strong>автоматично</strong> з тренувальних даних через gradient descent
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 21: PYTORCH CODE ═══════════════════════════════ -->
+<section>
+  <h2>CNN у PyTorch</h2>
+  <pre><code class="language-python" data-trim data-noescape>
+import torch.nn as nn
+
+model = nn.Sequential(
+    # Блок 1: RGB → 32 карти ознак
+    nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3),
+    nn.ReLU(),
+    nn.MaxPool2d(kernel_size=2, stride=2),
+
+    # Блок 2: 32 → 64 карти ознак
+    nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3),
+    nn.ReLU(),
+    nn.MaxPool2d(kernel_size=2, stride=2),
+
+    # Класифікатор
+    nn.Flatten(),
+    nn.Linear(64 * 6 * 6, 1024),
+    nn.ReLU(),
+    nn.Linear(1024, 10),  # 10 класів → softmax у функції втрат
+)
+  </code></pre>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 22: BREAST CANCER ═══════════════════════════════ -->
+<section>
+  <h2>Застосування: медична діагностика</h2>
+  <div class="box gold" style="font-size:1.1em; margin:0.8em 0;">
+    CNN-система для виявлення раку молочної залози <strong>перевершила</strong> команду лікарів-радіологів у міжнародному дослідженні
+  </div>
+  <p style="font-size:0.85em;">McKinney et al., <em>Nature</em>, 2020</p>
+  <p class="fragment" style="margin-top:0.8em;">Та сама архітектура CNN навчається виявляти:</p>
+  <ul class="fragment">
+    <li>Рак шкіри за дерматологічними фото</li>
+    <li>COVID-19 на рентгені легень</li>
+    <li>Діабетичну ретинопатію на знімках ока</li>
+  </ul>
+  <div class="fragment box green" style="margin-top:0.6em;">
+    Один і той самий підхід — різні медичні задачі
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 23: OBJECT DETECTION ═══════════════════════════════ -->
+<section>
+  <h2>Детекція об'єктів: еволюція підходів</h2>
+  <div class="cols">
+    <div>
+      <p><strong>Задача:</strong> знайти об'єкти і обвести їх рамками $(x, y, w, h)$</p>
+      <div class="fragment box red" style="margin-top:0.5em;">
+        <strong>❌ Наївний підхід:</strong> перевірити всі можливі вирізки.
+        Занадто багато комбінацій позицій, масштабів, пропорцій.
+      </div>
+    </div>
+    <div>
+      <div class="fragment box" style="margin-top:0.5em;">
+        <strong>R-CNN (2014):</strong> selective search → ~2000 кандидатів → CNN класифікує кожен.
+        Точний, але <em>повільний</em>.
+      </div>
+      <div class="fragment box green" style="margin-top:0.5em;">
+        <strong>Faster R-CNN (2016):</strong> невелика мережа (RPN) навчається пропонувати регіони.
+        Зображення проходить CNN <em>один раз</em>. Швидко і точно.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 24: SEGMENTATION ═══════════════════════════════ -->
+<section>
+  <h2>Семантична сегментація: FCN</h2>
+  <div class="cols">
+    <div>
+      <div class="box" style="font-size:1.05em;">
+        <strong>Задача:</strong> присвоїти клас кожному пікселю
+      </div>
+      <br>
+      <p class="fragment"><strong>Fully Convolutional Network (FCN):</strong></p>
+      <ol class="fragment">
+        <li><strong>Downsampling</strong> — згортки + пулінг → зменшення розміру</li>
+        <li><strong>Upsampling</strong> — транспоновані згортки (<code>ConvTranspose2d</code>) → повернення до оригінального розміру</li>
+      </ol>
+    </div>
+    <div class="fragment">
+      <table>
+        <tr><td>Вхід</td><td>$3 \times H \times W$</td></tr>
+        <tr><td>Вихід</td><td>$C \times H \times W$&nbsp;(C класів)</td></tr>
+      </table>
+      <br>
+      <div class="box green">
+        Застосування: аналіз ігрових сцен, навігаційні карти, медичні зображення
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Transfer Learning</h2>
+  <video width="800" height="600" controls="controls">
+    <source src="img/TransferLearningScene.mp4" type="video/mp4" />
+  </video>
+</section>
+
+<section>
+  <h2>Autonomous Navigation/Structure from motion/Localization</h2>
+  <div class="fragment">
+    <img src="img/hloc-example.png" />
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 25: AUTONOMOUS DRIVING ═══════════════════════════════ -->
+<section>
+  <h2>Autonomous Navigation/Structure from motion/Localization</h2>
+  <div class="cols">
+    <div>
+      <p><strong>Вхід:</strong> кадр з камери + (опційно) груба карта GPS</p>
+      <p><strong>Вихід:</strong> команди керування — кут руля, гальмування</p>
+      <br>
+      <p class="fragment">Модель тренується <strong>end-to-end</strong> без ручних правил.<br>
+        Функція втрат: $\mathcal{L} = -\log P(\theta \mid I, M)$</p>
+    </div>
+    <div class="fragment">
+      <div class="box gold">
+        <strong>Ключова ідея:</strong><br>
+        CNN витягує просторові ознаки з зображення → FC-шари навчаються відображати їх на дії
+      </div>
+      <br>
+      <p style="font-size:0.8em;">Amini et al., ICRA 2019</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 26: GAMES ═══════════════════════════════ -->
+<section>
+  <h2>CNN у розробці ігор</h2>
+  <div class="cols">
+    <ul>
+      <li class="fragment">🎨 <strong>Класифікація ассетів</strong><br>
+        Автоматичне сортування текстур, спрайтів, 3D-моделей</li>
+      <li class="fragment" style="margin-top:0.7em;">🐛 <strong>Автоматичне QA</strong><br>
+        Виявлення візуальних дефектів: артефакти рендерингу, проникнення текстур</li>
+    </ul>
+    <ul>
+      <li class="fragment">🗺 <strong>Оцінка контенту</strong><br>
+        Аналіз якості процедурно згенерованих рівнів</li>
+      <li class="fragment" style="margin-top:0.7em;">🕹 <strong>NPC Vision Systems</strong><br>
+        Агент «бачить» ігровий екран і приймає рішення на основі CNN-ознак</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ SLIDE 27: SUMMARY ═══════════════════════════════ -->
+<section>
+  <h2>Підсумок лекції</h2>
+  <table style="width:100%;">
+    <thead><tr><th>Концепція</th><th>Ключова ідея</th></tr></thead>
+    <tbody>
+      <tr class="fragment"><td>Зображення = числа</td><td>Матриця пікселів $H \times W \times C$</td></tr>
+      <tr class="fragment"><td>Проблема FC-мереж</td><td>Без просторової структури, занадто багато ваг</td></tr>
+      <tr class="fragment"><td>Згортка</td><td>Фільтр ковзає → локальні ознаки, спільні ваги</td></tr>
+      <tr class="fragment"><td>CNN = Conv+ReLU+Pool</td><td>Ієрархія ознак від країв до об'єктів</td></tr>
+      <tr class="fragment"><td>Навчання автоматичне</td><td>Ваги фільтрів — через backpropagation</td></tr>
+      <tr class="fragment"><td>Застосування</td><td>Класифікація, детекція, сегментація, навігація</td></tr>
+    </tbody>
+  </table>
+  <div class="fragment box green" style="margin-top:1em;">
+    <strong>Наступна лекція:</strong> YOLO, U-Net, Vision Transformers (ViT, DETR)
+  </div>
+</section>
+
+</div><!-- .slides -->
+</div><!-- .reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/plugin/math/math.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: "c/t",
+    transition: "slide",
+    transitionSpeed: "default",
+    controls: true,
+    progress: true,
+    center: true,
+    plugins: [ RevealHighlight, RevealMath.KaTeX ],
+  });
+</script>
+</body>
+</html>
