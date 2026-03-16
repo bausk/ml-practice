@@ -30,7 +30,7 @@ jobs:
             outdir="$REPO/labs-exported/$rel"
             mkdir -p "$outdir"
             (cd "$dir" && md-to-pdf "$name" --launch-options '{"args":["--no-sandbox"]}') \
-              && mv "$dir/${name%.md}.pdf" "$outdir/${name%.md}.pdf" \
+              > "$outdir/${name%.md}.pdf" \
               || echo "Warning: failed to convert $mdfile"
           done
 
