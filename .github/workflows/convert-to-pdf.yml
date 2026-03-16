@@ -1,5 +1,4 @@
 name: Docs to PDF
-# This workflow is triggered on pushes to the repository.
 permissions:
   contents: write
 
@@ -7,10 +6,9 @@ on:
   push:
     branches:
       - main
-    # Paths can be used to only trigger actions when you have edited certain files, such as a file within the /docs directory
     paths:
-      - 'labs-sources/**.md'
-      - 'labs-sources/images/**'
+      - 'labs-sources/**/*.md'
+      - 'labs-sources/**/images/**'
 
 jobs:
   converttopdf:
@@ -18,16 +16,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
-      - uses: BaileyJM02/markdown-to-pdf@v1.2.0
-        with:
-          input_dir: labs-sources
-          output_dir: labs-exported/
-          images_dir: labs-sources/images
-          # for example <img src="./images/file-name.png">
-          image_import: ./images
-          # Default is true, can set to false to only get PDF files
-          build_html: false
+
+      - name: Install md-to-pdf
+        run: npm install -g md-to-pdf
+
+      - name: Convert labs to PDF
+        run: |
+          REPO=$(pwd)
+          find labs-sources -name "*.md" | while read mdfile; do
+            dir=$(dirname "$mdfile")
+            name=$(basename "$mdfile")
+            rel=$(realpath --relative-to="labs-sources" "$dir")
+            outdir="$REPO/labs-exported/$rel"
+            mkdir -p "$outdir"
+            (cd "$dir" && md-to-pdf "$name" --dest "$outdir/${name%.md}.pdf") \
+              || echo "Warning: failed to convert $mdfile"
+          done
 
       - name: Commit PDF files
         run: |
@@ -35,7 +39,7 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git add labs-exported/
           git commit -m "Auto-generate PDFs from markdown" || echo "No changes to commit"
-          
+
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:

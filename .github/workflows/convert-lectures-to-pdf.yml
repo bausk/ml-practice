@@ -1,5 +1,4 @@
 name: Lecture Notes to PDF
-# This workflow is triggered on pushes to the repository.
 permissions:
   contents: write
 
@@ -8,8 +7,8 @@ on:
     branches:
       - main
     paths:
-      - 'lectures-sources/**.md'
-      - 'lectures-sources/images/**'
+      - 'lectures-sources/**/*.md'
+      - 'lectures-sources/**/images/**'
 
 jobs:
   converttopdf:
@@ -18,13 +17,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: BaileyJM02/markdown-to-pdf@v1.2.0
-        with:
-          input_dir: lectures-sources
-          output_dir: lectures-exported/
-          images_dir: lectures-sources/images
-          image_import: ./images
-          build_html: false
+      - name: Install md-to-pdf
+        run: npm install -g md-to-pdf
+
+      - name: Convert lectures to PDF
+        run: |
+          REPO=$(pwd)
+          find lectures-sources -name "*.md" | while read mdfile; do
+            dir=$(dirname "$mdfile")
+            name=$(basename "$mdfile")
+            rel=$(realpath --relative-to="lectures-sources" "$dir")
+            outdir="$REPO/lectures-exported/$rel"
+            mkdir -p "$outdir"
+            (cd "$dir" && md-to-pdf "$name" --dest "$outdir/${name%.md}.pdf") \
+              || echo "Warning: failed to convert $mdfile"
+          done
 
       - name: Commit PDF files
         run: |
