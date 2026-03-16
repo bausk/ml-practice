@@ -29,7 +29,8 @@ jobs:
             rel=$(realpath --relative-to="lectures-sources" "$dir")
             outdir="$REPO/lectures-exported/$rel"
             mkdir -p "$outdir"
-            (cd "$dir" && md-to-pdf "$name" --dest "$outdir/${name%.md}.pdf") \
+            (cd "$dir" && md-to-pdf "$name") \
+              && mv "$dir/${name%.md}.pdf" "$outdir/${name%.md}.pdf" \
               || echo "Warning: failed to convert $mdfile"
           done
 
