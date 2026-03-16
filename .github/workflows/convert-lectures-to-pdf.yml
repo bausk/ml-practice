@@ -21,18 +21,26 @@ jobs:
         run: npm install -g md-to-pdf
 
       - name: Convert lectures to PDF
+        shell: bash
         run: |
           REPO=$(pwd)
-          find lectures-sources -name "*.md" | while read mdfile; do
+          while IFS= read -r mdfile; do
             dir=$(dirname "$mdfile")
             name=$(basename "$mdfile")
-            rel=$(realpath --relative-to="lectures-sources" "$dir")
-            outdir="$REPO/lectures-exported/$rel"
+            rel="${dir#lectures-sources}"
+            rel="${rel#/}"
+            outdir="$REPO/lectures-exported${rel:+/$rel}"
             mkdir -p "$outdir"
-            (cd "$dir" && md-to-pdf "$name" --launch-options '{"args":["--no-sandbox"]}') \
-              > "$outdir/${name%.md}.pdf" \
-              || echo "Warning: failed to convert $mdfile"
-          done
+            outpdf="$outdir/${name%.md}.pdf"
+            diskpdf="$REPO/$dir/${name%.md}.pdf"
+            # capture stdout (some versions write there); ignore exit code for now
+            (cd "$dir" && md-to-pdf "$name" --launch-options '{"args":["--no-sandbox"]}' < /dev/null) > "$outpdf" || true
+            # if stdout was empty, fall back to disk-written PDF
+            if [ ! -s "$outpdf" ] && [ -f "$diskpdf" ]; then
+              mv "$diskpdf" "$outpdf"
+            fi
+            [ -s "$outpdf" ] && echo "✓ $mdfile" || echo "✗ Warning: failed to convert $mdfile"
+          done < <(find lectures-sources -name "*.md")
 
       - name: Commit PDF files
         run: |

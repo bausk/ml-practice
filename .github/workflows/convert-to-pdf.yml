@@ -21,18 +21,36 @@ jobs:
         run: npm install -g md-to-pdf
 
       - name: Convert labs to PDF
+        shell: bash
         run: |
           REPO=$(pwd)
-          find labs-sources -name "*.md" | while read mdfile; do
+          echo "=== Files found by find ==="
+          find labs-sources -name "*.md"
+          echo "==========================="
+          while IFS= read -r mdfile; do
             dir=$(dirname "$mdfile")
             name=$(basename "$mdfile")
-            rel=$(realpath --relative-to="labs-sources" "$dir")
-            outdir="$REPO/labs-exported/$rel"
+            rel="${dir#labs-sources}"
+            rel="${rel#/}"
+            outdir="$REPO/labs-exported${rel:+/$rel}"
             mkdir -p "$outdir"
-            (cd "$dir" && md-to-pdf "$name" --launch-options '{"args":["--no-sandbox"]}') \
-              > "$outdir/${name%.md}.pdf" \
-              || echo "Warning: failed to convert $mdfile"
-          done
+            outpdf="$outdir/${name%.md}.pdf"
+            diskpdf="$REPO/$dir/${name%.md}.pdf"
+            echo "--- $mdfile ---"
+            echo "  outpdf:  $outpdf"
+            echo "  diskpdf: $diskpdf"
+            stderr_tmp=$(mktemp)
+            (cd "$dir" && md-to-pdf "$name" --launch-options '{"args":["--no-sandbox"]}' < /dev/null 2>"$stderr_tmp") > "$outpdf"
+            exit_code=$?
+            echo "  exit: $exit_code  stdout_bytes: $(wc -c < "$outpdf")  diskpdf_exists: $([ -f "$diskpdf" ] && echo yes || echo no)"
+            [ -s "$stderr_tmp" ] && echo "  stderr: $(cat "$stderr_tmp")"
+            rm -f "$stderr_tmp"
+            if [ ! -s "$outpdf" ] && [ -f "$diskpdf" ]; then
+              mv "$diskpdf" "$outpdf"
+              echo "  used disk PDF"
+            fi
+            [ -s "$outpdf" ] && echo "  ✓ $mdfile" || echo "  ✗ Warning: failed to convert $mdfile"
+          done < <(find labs-sources -name "*.md")
 
       - name: Commit PDF files
         run: |
