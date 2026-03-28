@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Лекція 8 (ч.2): Комп'ютерний зір у розробці ігор</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/theme/moon.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/plugin/highlight/monokai.css">
+  <style>
+    :root {
+      --accent: #3498db;
+      --accent2: #2ecc71;
+      --warn: #e74c3c;
+      --gold: #f39c12;
+      --purple: #9b59b6;
+    }
+    .reveal { font-size: 26px; }
+    .reveal h1 { font-size: 1.9em; color: #ecf0f1; }
+    .reveal h2 { font-size: 1.35em; color: #85c1e9; }
+    .reveal h3 { font-size: 1.1em; color: #aed6f1; }
+    .reveal p  { line-height: 1.5; }
+    .reveal ul { line-height: 1.7; }
+    .reveal section img { max-height: 66vh; margin: 0 auto; display: block; border: none; box-shadow: none; }
+    .reveal pre { width: 100%; font-size: 0.72em; }
+    .reveal code { background: #1a1a2e; }
+
+    .cols   { display: flex; gap: 2em; align-items: flex-start; }
+    .cols > * { flex: 1; }
+    .box {
+      background: rgba(52, 152, 219, 0.15);
+      border-left: 4px solid var(--accent);
+      padding: 0.5em 1em;
+      margin: 0.5em 0;
+      border-radius: 4px;
+    }
+    .box.green  { background: rgba(46,204,113,0.12); border-color: var(--accent2); }
+    .box.red    { background: rgba(231, 76, 60, 0.12); border-color: var(--warn); }
+    .box.gold   { background: rgba(243,156,18,0.12); border-color: var(--gold); }
+    .box.purple { background: rgba(155,89,182,0.12); border-color: var(--purple); }
+    .tag {
+      display: inline-block;
+      padding: 0.15em 0.6em;
+      border-radius: 20px;
+      font-size: 0.75em;
+      font-weight: bold;
+      vertical-align: middle;
+    }
+    .tag.blue  { background: var(--accent); color: white; }
+    .tag.green { background: var(--accent2); color: #111; }
+    .tag.purple { background: var(--purple); color: white; }
+    .tag.red   { background: var(--warn); color: white; }
+    .footer    { font-size: 0.55em; color: #7f8c8d; margin-top: 1em; }
+    table th   { background: rgba(52,152,219,0.3); }
+    table td, table th { border: 1px solid #4a6fa5; padding: 0.4em 0.7em; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ═══════════════════════ SLIDE 1: TITLE ═══════════════════════ -->
+<section>
+  <h1>Комп'ютерний зір у розробці ігор</h1>
+  <h2 style="color:#85c1e9; margin-top:0.2em;">Детекція, сегментація та розуміння сцен</h2>
+  <br>
+  <p>Лекція 8 (частина 2)</p>
+  <p>Штучний інтелект в ігрових застосунках</p>
+  <p style="margin-top:1em;">Національний університет «Львівська Політехніка»</p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 2: MOTIVATION ═══════════════════════ -->
+<section>
+  <h2>Коли гра починає «бачити»</h2>
+  <div class="cols">
+    <div>
+      <div class="box red">
+        <h3>Класичний NPC</h3>
+        <ul>
+          <li>Raycast до цілей</li>
+          <li>Прямий доступ до координат</li>
+          <li>Бінарне «бачу / не бачу»</li>
+          <li><strong>«Читерство»</strong></li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="box green">
+        <h3>CV-NPC</h3>
+        <ul>
+          <li>Отримує зображення з камери</li>
+          <li>Поступове розпізнавання</li>
+          <li>Помилки ідентифікації</li>
+          <li><strong>Як людина</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <br>
+  <p class="fragment">Три напрямки CV в іграх: <span class="tag blue">Всередині гри</span> <span class="tag green">У розробці</span> <span class="tag purple">Навколо гри</span></p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 3: CV TASKS ═══════════════════════ -->
+<section>
+  <h2>Задачі комп'ютерного зору</h2>
+  <img src="img/01_detection_vs_segmentation.png" alt="Detection vs Segmentation">
+  <p class="footer">Класифікація → Детекція → Сегментація: зростає рівень деталізації розуміння</p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 4: DETECTION FORMULATION ═══════════════════════ -->
+<section>
+  <h2>Детекція об'єктів: формулювання</h2>
+  <p>Для кожного об'єкта модель передбачає:</p>
+  <br>
+  <div class="cols">
+    <div class="box">
+      <h3>Координати рамки</h3>
+      <p><code>(x, y, w, h)</code></p>
+    </div>
+    <div class="box gold">
+      <h3>Клас об'єкта</h3>
+      <p><code>c ∈ {1, ..., C}</code></p>
+    </div>
+    <div class="box green">
+      <h3>Впевненість</h3>
+      <p><code>p(c) ∈ [0, 1]</code></p>
+    </div>
+  </div>
+  <br>
+  <div class="fragment box red">
+    <p><strong>Складність:</strong> десятки/сотні об'єктів різного розміру, з перекриттями, на складному фоні — за один прохід мережі</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 5: TWO-STAGE VS ONE-STAGE ═══════════════════════ -->
+<section>
+  <h2>Еволюція підходів до детекції</h2>
+  <div class="cols">
+    <div>
+      <div class="box">
+        <h3>Двоетапні (Two-stage)</h3>
+        <ul>
+          <li><strong>R-CNN</strong> (2014): Selective Search + CNN</li>
+          <li><strong>Fast R-CNN</strong>: CNN один раз</li>
+          <li><strong>Faster R-CNN</strong>: Region Proposal Network</li>
+        </ul>
+        <p style="color: var(--warn);">~5 FPS — точно, але повільно</p>
+      </div>
+    </div>
+    <div>
+      <div class="box green">
+        <h3>Одноетапні (One-stage)</h3>
+        <ul>
+          <li><strong>YOLO</strong>: сітка S×S, один прохід</li>
+          <li><strong>SSD</strong>: multi-scale feature maps</li>
+          <li><strong>RetinaNet</strong>: Focal Loss</li>
+        </ul>
+        <p style="color: var(--accent2);">400+ FPS — швидко і точно</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 6: YOLO EVOLUTION ═══════════════════════ -->
+<section>
+  <h2>YOLO: від v1 до v11</h2>
+  <img src="img/02_yolo_evolution.png" alt="YOLO Evolution">
+  <p class="footer">mAP@50:95 на COCO: v1 (63%) → v8 (53.9% mAP@50:95) при 400+ FPS</p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 7: mAP and IoU ═══════════════════════ -->
+<section>
+  <h2>Метрики: IoU та mAP</h2>
+  <div class="cols">
+    <div>
+      <div class="box gold">
+        <h3>IoU (Intersection over Union)</h3>
+        <p style="font-size: 1.2em; text-align: center;">IoU = |B<sub>pred</sub> ∩ B<sub>gt</sub>| / |B<sub>pred</sub> ∪ B<sub>gt</sub>|</p>
+        <p>IoU ≥ 0.5 → об'єкт «знайдено»</p>
+      </div>
+    </div>
+    <div>
+      <div class="box">
+        <h3>mAP (mean Average Precision)</h3>
+        <ul>
+          <li>Для кожного класу — крива precision-recall</li>
+          <li>AP = площа під кривою</li>
+          <li>mAP = середнє по класах</li>
+          <li><strong>mAP@50:95</strong> — основний бенчмарк</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 8: DETECTION IN GAMES ═══════════════════════ -->
+<section>
+  <h2>Детекція в іграх: застосування</h2>
+  <div class="cols">
+    <div>
+      <div class="box">
+        <h3>NPC-зір</h3>
+        <p>Поступове розпізнавання, обмежене поле зору, контекстна обізнаність</p>
+        <p class="footer">MineRL, MineDojo (NVIDIA)</p>
+      </div>
+      <div class="box red">
+        <h3>Античіт</h3>
+        <p>Детекція оверлеїв, аналіз руху прицілу, відеоаналіз стрімів</p>
+        <p class="footer">Riot Games, Easy Anti-Cheat</p>
+      </div>
+    </div>
+    <div>
+      <div class="box green">
+        <h3>Автоматичне QA</h3>
+        <p>Графічні артефакти, z-fighting, UI-перевірка, порівняння білдів</p>
+        <p class="footer">EA AutoPlay, Ubisoft La Forge</p>
+      </div>
+      <div class="box gold">
+        <h3>Кіберспорт</h3>
+        <p>Позиції гравців, теплові карти, highlight detection</p>
+        <p class="footer">GRID / Bayes Esports</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 9: SEGMENTATION TYPES ═══════════════════════ -->
+<section>
+  <h2>Три рівні сегментації</h2>
+  <img src="img/03_segmentation_types.png" alt="Segmentation Types">
+  <p class="footer">Семантична — класи; Інстансна — окремі об'єкти; Паноптична — все разом</p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 10: U-NET ═══════════════════════ -->
+<section>
+  <h2>U-Net: encoder-decoder з skip connections</h2>
+  <img src="img/04_unet_architecture.png" alt="U-Net Architecture">
+  <p class="footer">Encoder зменшує → витягує ознаки. Decoder відновлює → локалізує межі. Skip connections зберігають деталі.</p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 11: KEY ARCHITECTURES ═══════════════════════ -->
+<section>
+  <h2>Ключові архітектури сегментації</h2>
+  <table>
+    <tr><th>Архітектура</th><th>Рік</th><th>Ключова ідея</th><th>Тип</th></tr>
+    <tr><td><strong>U-Net</strong></td><td>2015</td><td>Encoder-decoder + skip connections</td><td>Семантична</td></tr>
+    <tr><td><strong>DeepLab v3+</strong></td><td>2018</td><td>Atrous convolutions + ASPP</td><td>Семантична</td></tr>
+    <tr><td><strong>Mask R-CNN</strong></td><td>2017</td><td>Faster R-CNN + маска для кожної рамки</td><td>Інстансна</td></tr>
+    <tr><td><strong>SAM</strong></td><td>2023</td><td>Foundation model, 1.1B масок, zero-shot</td><td>Будь-яка</td></tr>
+  </table>
+</section>
+
+<!-- ═══════════════════════ SLIDE 12: SEGMENTATION IN GAMES ═══════════════════════ -->
+<section>
+  <h2>Сегментація в іграх</h2>
+  <div class="cols">
+    <div>
+      <div class="box green">
+        <h3>Процедурна генерація</h3>
+        <p>Супутникове фото → сегментація → біоми / тайли для ігрової карти</p>
+      </div>
+      <div class="box">
+        <h3>Навігація RL-агентів</h3>
+        <p>Кадр → маски «підлога», «стіна», «двері» → навігаційні рішення</p>
+        <p class="footer">ViZDoom</p>
+      </div>
+    </div>
+    <div>
+      <div class="box gold">
+        <h3>AR та маттінг</h3>
+        <p>Відділення гравця від фону в реальному часі (MediaPipe, 30+ FPS)</p>
+      </div>
+      <div class="box purple">
+        <h3>Аналіз композиції</h3>
+        <p>Баланс візуальних елементів, контраст персонажа на фоні</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 13: VISION TRANSFORMERS ═══════════════════════ -->
+<section>
+  <h2>Vision Transformer (ViT)</h2>
+  <img src="img/05_vit_architecture.png" alt="ViT Architecture">
+  <p class="footer">Зображення → патчі 16×16 → embedding + позиції → Transformer encoder → класифікація/детекція/сегментація</p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 14: SWIN + DETR ═══════════════════════ -->
+<section>
+  <h2>Swin Transformer та DETR</h2>
+  <div class="cols">
+    <div>
+      <div class="box purple">
+        <h3>Swin Transformer (2021)</h3>
+        <ul>
+          <li>Локальні вікна → лінійна складність</li>
+          <li>Shifted windows між шарами</li>
+          <li>Ієрархічне представлення</li>
+          <li>Новий SOTA backbone для CV</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="box gold">
+        <h3>DETR (2020)</h3>
+        <ul>
+          <li>End-to-end детекція</li>
+          <li>Без anchor boxes, без NMS</li>
+          <li>Object queries → predictions</li>
+          <li>Hungarian matching</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <br>
+  <div class="fragment box green">
+    <p><strong>Для ігор:</strong> глобальний контекст, гнучкість роздільності, природне поєднання з мовними моделями</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 15: CLIP ═══════════════════════ -->
+<section>
+  <h2>CLIP: зір + мова</h2>
+  <img src="img/06_clip_concept.png" alt="CLIP Concept">
+  <p class="footer">400M пар «зображення + текст» → спільний embedding-простір → zero-shot класифікація</p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 16: CLIP IN GAMES ═══════════════════════ -->
+<section>
+  <h2>CLIP в ігровій розробці</h2>
+  <div class="box"><strong>Семантичний пошук ассетів:</strong> художник пише «mossy stone wall in forest» → знаходить релевантні текстури з бібліотеки на 50K ассетів</div>
+  <div class="box gold"><strong>Автокласифікація:</strong> жанр скріншоту, настрій сцени, наявність елементів — без спеціального тренування</div>
+  <div class="box green"><strong>Генерація з тексту:</strong> CLIP + Stable Diffusion = концепт-арт або текстура за текстовим описом</div>
+  <div class="box purple"><strong>Стилістична консистентність:</strong> перевірка, чи новий ассет відповідає арт-стилю гри через embedding-відстань</div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 17: SAM ═══════════════════════ -->
+<section>
+  <h2>SAM: Segment Anything Model</h2>
+  <div class="box gold">
+    <p><strong>Meta, 2023:</strong> foundation model для сегментації</p>
+    <p>11M зображень, 1.1B масок, zero-shot на будь-яких зображеннях</p>
+  </div>
+  <br>
+  <div class="cols">
+    <div class="fragment box">
+      <h3>Для розробки</h3>
+      <ul>
+        <li>Швидке створення навчальних масок</li>
+        <li>Вирізання об'єктів для промо</li>
+        <li>Автоматичні LOD-маски</li>
+      </ul>
+    </div>
+    <div class="fragment box green">
+      <h3>SAM 2 (2024): відео</h3>
+      <ul>
+        <li>Виділити на одному кадрі → трекінг по всьому відео</li>
+        <li>VFX у кінематиках</li>
+        <li>Аналітика кіберспортивних матчів</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 18: DEPTH ESTIMATION ═══════════════════════ -->
+<section>
+  <h2>Оцінка глибини з одного фото</h2>
+  <div class="box">
+    <p><strong>Depth Anything v2</strong> (ByteDance, 2024): 62M зображень, метрична глибина, реалтайм</p>
+  </div>
+  <br>
+  <div class="cols">
+    <div class="box gold">
+      <h3>Normal maps</h3>
+      <p>2D текстура → карта глибини → автоматичний normal map</p>
+    </div>
+    <div class="box green">
+      <h3>2.5D ефекти</h3>
+      <p>Фото → глибина → паралакс для «живих» фонів</p>
+    </div>
+    <div class="box purple">
+      <h3>AR окклюзія</h3>
+      <p>Pokemon ховається за деревами завдяки depth map</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 19: CASE STUDIES ═══════════════════════ -->
+<section>
+  <h2>Кейси: CV в реальних іграх</h2>
+  <table>
+    <tr><th>Проєкт</th><th>Технологія</th><th>Результат</th></tr>
+    <tr><td><strong>MineDojo</strong> (NVIDIA)</td><td>MineCLIP (CLIP + відео)</td><td>Агент виконує текстові інструкції в Minecraft</td></tr>
+    <tr><td><strong>Ubisoft La Forge</strong></td><td>Детекція + сегментація</td><td>Автоматичне QA для Assassin's Creed</td></tr>
+    <tr><td><strong>MediaPipe</strong> (Google)</td><td>Pose + Hand tracking</td><td>Just Dance, Beat Saber, Vision Pro</td></tr>
+    <tr><td><strong>GRID Esports</strong></td><td>YOLO на мінімапі</td><td>Автоматична аналітика CS/Dota 2</td></tr>
+    <tr><td><strong>ControlNet + SD</strong></td><td>Neural Style Transfer</td><td>Перестилізація ігрових скріншотів</td></tr>
+  </table>
+</section>
+
+<!-- ═══════════════════════ SLIDE 20: INFERENCE SPEED ═══════════════════════ -->
+<section>
+  <h2>Швидкість: що працює в реальному часі?</h2>
+  <img src="img/08_inference_speed.png" alt="Inference Speed">
+  <p class="footer">Легкі моделі (YOLO-nano, Depth Anything-S) → реалтайм. Важкі (SAM, Swin-L) → інструменти розробки.</p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 21: OPTIMIZATION ═══════════════════════ -->
+<section>
+  <h2>Оптимізація для ігрових рушіїв</h2>
+  <div class="cols">
+    <div>
+      <div class="box">
+        <h3>Формати</h3>
+        <ul>
+          <li><strong>ONNX</strong> — універсальний обмін</li>
+          <li><strong>TensorRT</strong> — NVIDIA, FP16/INT8</li>
+          <li><strong>Core ML</strong> — Apple Neural Engine</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="box green">
+        <h3>Інтеграція</h3>
+        <ul>
+          <li><strong>Barracuda</strong> — ONNX в Unity</li>
+          <li><strong>NNE</strong> — ONNX в Unreal Engine 5</li>
+          <li>PyTorch → <code>torch.export</code> → ONNX</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <br>
+  <pre class="fragment"><code>PyTorch → torch.export → ONNX → TensorRT → Ігровий рушій (C++) → GPU інференс (&lt; 5 мс)</code></pre>
+</section>
+
+<!-- ═══════════════════════ SLIDE 22: FULL PIPELINE ═══════════════════════ -->
+<section>
+  <h2>Повний пайплайн розуміння сцени</h2>
+  <img src="img/07_game_cv_pipeline.png" alt="Game CV Pipeline">
+  <p class="footer">YOLO + DeepLab + Depth Anything → fusion → 3D-позиції, прохідні зони, контекст → ігрова логіка</p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 23: SUMMARY ═══════════════════════ -->
+<section>
+  <h2>Ключові висновки</h2>
+  <ol>
+    <li class="fragment"><strong>YOLO</strong> — реалтайм детекція для NPC-зору, QA, античіту</li>
+    <li class="fragment"><strong>Сегментація</strong> (U-Net → SAM) — попіксельне розуміння для процедурної генерації та AR</li>
+    <li class="fragment"><strong>Vision Transformers</strong> — глобальний контекст замість локальних згорток</li>
+    <li class="fragment"><strong>CLIP</strong> — зв'язок зору та мови для zero-shot і генерації</li>
+    <li class="fragment"><strong>Depth Anything</strong> — 3D з одного фото для AR, нормалей, пост-обробки</li>
+    <li class="fragment">CV в іграх = <span class="tag red">всередині</span> + <span class="tag blue">у розробці</span> + <span class="tag purple">навколо гри</span></li>
+  </ol>
+</section>
+
+<!-- ═══════════════════════ SLIDE 24: NEXT ═══════════════════════ -->
+<section>
+  <h2>Що далі?</h2>
+  <br>
+  <div class="box gold">
+    <h3>Наступна лекція: Обробка послідовностей</h3>
+    <ul>
+      <li>RNN, LSTM — моделювання часових рядів</li>
+      <li>Механізм уваги (attention)</li>
+      <li>Архітектура Transformer</li>
+      <li>Від CV до NLP і назад</li>
+    </ul>
+  </div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/plugin/highlight/highlight.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    plugins: [ RevealHighlight ],
+    transition: 'slide',
+    width: 1280,
+    height: 720
+  });
+</script>
+</body>
+</html>

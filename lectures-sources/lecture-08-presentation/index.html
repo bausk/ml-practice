@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лекція 8: Від фотографій до ігрових світів</title>
+
+    <!-- Fonts: Bricolage Grotesque (display) + Figtree (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES (THEME)
+           "Warm Technical" — editorial light theme
+           with blue/orange/emerald accents
+           =========================================== */
+        :root {
+            /* Colors */
+            --bg-primary: #FAF7F2;
+            --bg-card: #FFFFFF;
+            --bg-code: #1B2332;
+            --text-primary: #1B2332;
+            --text-secondary: #5A6478;
+            --text-muted: #8B95A5;
+            --accent-blue: #2563EB;
+            --accent-orange: #F97316;
+            --accent-emerald: #10B981;
+            --accent-rose: #E11D48;
+            --accent-violet: #7C3AED;
+            --border-light: #E5E1DA;
+            --shadow-soft: 0 2px 12px rgba(27,35,50,0.06);
+            --shadow-card: 0 4px 24px rgba(27,35,50,0.08);
+
+            /* Typography — uses clamp() */
+            --font-display: 'Bricolage Grotesque', sans-serif;
+            --font-body: 'Figtree', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --title-size: clamp(1.5rem, 5vw, 4rem);
+            --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+            --h3-size: clamp(1rem, 2.5vw, 1.5rem);
+            --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+            --small-size: clamp(0.65rem, 1vw, 0.875rem);
+            --mono-size: clamp(0.65rem, 1.1vw, 0.85rem);
+
+            /* Spacing */
+            --slide-padding: clamp(1rem, 4vw, 4rem);
+            --content-gap: clamp(0.5rem, 2vw, 2rem);
+            --element-gap: clamp(0.25rem, 1vw, 1rem);
+
+            /* Animation */
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.6s;
+        }
+
+        /* ===========================================
+           BASE STYLES
+           =========================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* --- VIEWPORT-BASE.CSS (MANDATORY) --- */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+        }
+        .card, .container, .content-box {
+            max-width: min(90vw, 1000px);
+            max-height: min(80vh, 700px);
+        }
+        .feature-list, .bullet-list {
+            gap: clamp(0.4rem, 1vh, 1rem);
+        }
+        .feature-list li, .bullet-list li {
+            font-size: var(--body-size);
+            line-height: 1.4;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+            gap: clamp(0.5rem, 1.5vw, 1rem);
+        }
+        img, .image-container {
+            max-width: 100%;
+            max-height: min(50vh, 400px);
+            object-fit: contain;
+        }
+
+        @media (max-height: 700px) {
+            :root {
+                --slide-padding: clamp(0.75rem, 3vw, 2rem);
+                --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+                --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+                --h2-size: clamp(1rem, 3vw, 1.75rem);
+            }
+        }
+        @media (max-height: 600px) {
+            :root {
+                --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+                --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+                --title-size: clamp(1.1rem, 4vw, 2rem);
+                --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+            }
+            .nav-dots, .keyboard-hint, .decorative { display: none; }
+        }
+        @media (max-height: 500px) {
+            :root {
+                --slide-padding: clamp(0.4rem, 2vw, 1rem);
+                --title-size: clamp(1rem, 3.5vw, 1.5rem);
+                --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+                --body-size: clamp(0.65rem, 1vw, 0.85rem);
+            }
+        }
+        @media (max-width: 600px) {
+            :root { --title-size: clamp(1.25rem, 7vw, 2.5rem); }
+            .grid { grid-template-columns: 1fr; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+            html { scroll-behavior: auto; }
+        }
+        /* --- END VIEWPORT-BASE.CSS --- */
+
+        /* ===========================================
+           SLIDE STYLES
+           =========================================== */
+        body {
+            background: var(--bg-primary);
+            font-family: var(--font-body);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .slide {
+            background: var(--bg-primary);
+        }
+
+        /* === SECTION NUMBER === */
+        .section-num {
+            font-family: var(--font-display);
+            font-size: clamp(4rem, 12vw, 10rem);
+            font-weight: 800;
+            color: var(--border-light);
+            position: absolute;
+            top: clamp(0.5rem, 2vh, 2rem);
+            right: clamp(1rem, 4vw, 4rem);
+            line-height: 1;
+            z-index: 0;
+            user-select: none;
+        }
+
+        /* === TYPOGRAPHY === */
+        h1 {
+            font-family: var(--font-display);
+            font-size: var(--title-size);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+        h2 {
+            font-family: var(--font-display);
+            font-size: var(--h2-size);
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.01em;
+            color: var(--text-primary);
+            margin-bottom: var(--content-gap);
+        }
+        h3 {
+            font-family: var(--font-display);
+            font-size: var(--h3-size);
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-primary);
+        }
+        p, li {
+            font-size: var(--body-size);
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        strong { color: var(--text-primary); font-weight: 600; }
+        code {
+            font-family: var(--font-mono);
+            font-size: var(--mono-size);
+            background: rgba(27,35,50,0.06);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+        }
+
+        /* === ACCENT LINE (left border) === */
+        .accent-line {
+            width: 4px;
+            height: clamp(40px, 8vh, 80px);
+            border-radius: 2px;
+            position: absolute;
+            left: clamp(1rem, 3vw, 3rem);
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .accent-line.blue { background: var(--accent-blue); }
+        .accent-line.orange { background: var(--accent-orange); }
+        .accent-line.emerald { background: var(--accent-emerald); }
+        .accent-line.rose { background: var(--accent-rose); }
+        .accent-line.violet { background: var(--accent-violet); }
+
+        /* === CARDS === */
+        .info-card {
+            background: var(--bg-card);
+            border-radius: clamp(8px, 1.5vw, 16px);
+            padding: clamp(0.75rem, 2vw, 1.5rem);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-light);
+        }
+        .info-card.accent-blue { border-left: 4px solid var(--accent-blue); }
+        .info-card.accent-orange { border-left: 4px solid var(--accent-orange); }
+        .info-card.accent-emerald { border-left: 4px solid var(--accent-emerald); }
+        .info-card.accent-rose { border-left: 4px solid var(--accent-rose); }
+        .info-card.accent-violet { border-left: 4px solid var(--accent-violet); }
+
+        /* === LAYOUT HELPERS === */
+        .cols {
+            display: flex;
+            gap: clamp(0.75rem, 2vw, 2rem);
+            align-items: stretch;
+        }
+        .cols > * { flex: 1; min-width: 0; }
+
+        .rows {
+            display: flex;
+            flex-direction: column;
+            gap: var(--element-gap);
+        }
+
+        /* === TAGS / BADGES === */
+        .tag {
+            display: inline-block;
+            padding: clamp(0.15em, 0.3vw, 0.25em) clamp(0.5em, 1vw, 0.75em);
+            border-radius: 100px;
+            font-size: var(--small-size);
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        .tag.blue { background: rgba(37,99,235,0.1); color: var(--accent-blue); }
+        .tag.orange { background: rgba(249,115,22,0.1); color: var(--accent-orange); }
+        .tag.emerald { background: rgba(16,185,129,0.1); color: var(--accent-emerald); }
+        .tag.rose { background: rgba(225,29,72,0.1); color: var(--accent-rose); }
+        .tag.violet { background: rgba(124,58,237,0.1); color: var(--accent-violet); }
+
+        /* === HIGHLIGHT BOX === */
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(249,115,22,0.05));
+            border: 1px solid var(--border-light);
+            border-radius: clamp(8px, 1.5vw, 16px);
+            padding: clamp(0.75rem, 2vw, 1.5rem);
+        }
+
+        /* === TABLE === */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: var(--small-size);
+        }
+        th {
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            font-family: var(--font-display);
+            font-weight: 600;
+            padding: clamp(0.3rem, 0.8vw, 0.6rem) clamp(0.4rem, 1vw, 0.8rem);
+            text-align: left;
+        }
+        td {
+            padding: clamp(0.25rem, 0.6vw, 0.5rem) clamp(0.4rem, 1vw, 0.8rem);
+            border-bottom: 1px solid var(--border-light);
+        }
+        tr:nth-child(even) td { background: rgba(27,35,50,0.02); }
+
+        /* === FOOTER === */
+        .slide-footer {
+            font-size: var(--small-size);
+            color: var(--text-muted);
+            padding: clamp(0.3rem, 1vw, 0.75rem) var(--slide-padding);
+            text-align: right;
+        }
+
+        /* === CSS DIAGRAM COMPONENTS === */
+        .diagram-flow {
+            display: flex;
+            align-items: center;
+            gap: clamp(0.25rem, 0.5vw, 0.5rem);
+            flex-wrap: nowrap;
+            justify-content: center;
+        }
+        .diagram-box {
+            background: var(--bg-card);
+            border: 2px solid var(--border-light);
+            border-radius: clamp(6px, 1vw, 12px);
+            padding: clamp(0.3rem, 0.8vw, 0.6rem) clamp(0.5rem, 1vw, 0.8rem);
+            font-size: var(--small-size);
+            font-weight: 600;
+            text-align: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .diagram-box.blue { border-color: var(--accent-blue); background: rgba(37,99,235,0.06); }
+        .diagram-box.orange { border-color: var(--accent-orange); background: rgba(249,115,22,0.06); }
+        .diagram-box.emerald { border-color: var(--accent-emerald); background: rgba(16,185,129,0.06); }
+        .diagram-box.rose { border-color: var(--accent-rose); background: rgba(225,29,72,0.06); }
+        .diagram-box.violet { border-color: var(--accent-violet); background: rgba(124,58,237,0.06); }
+        .diagram-arrow {
+            font-size: clamp(0.8rem, 1.5vw, 1.2rem);
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        /* Vertical diagram */
+        .diagram-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(0.15rem, 0.4vh, 0.3rem);
+        }
+        .diagram-vertical .diagram-arrow {
+            transform: rotate(90deg);
+        }
+
+        /* === PIPELINE VISUAL (horizontal step strip) === */
+        .pipeline-strip {
+            display: flex;
+            gap: 0;
+            border-radius: clamp(6px, 1vw, 12px);
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+        }
+        .pipeline-step {
+            flex: 1;
+            padding: clamp(0.4rem, 1vw, 0.75rem) clamp(0.3rem, 0.7vw, 0.6rem);
+            text-align: center;
+            color: white;
+            font-size: var(--small-size);
+            font-weight: 600;
+            position: relative;
+        }
+        .pipeline-step .step-num {
+            display: block;
+            font-family: var(--font-display);
+            font-size: clamp(1rem, 2.5vw, 1.8rem);
+            font-weight: 800;
+            opacity: 0.4;
+            line-height: 1;
+        }
+        .pipeline-step .step-label {
+            display: block;
+            font-size: clamp(0.5rem, 0.9vw, 0.7rem);
+            margin-top: 0.2em;
+            line-height: 1.2;
+        }
+
+        /* === TITLE SLIDE SPECIAL === */
+        .title-slide {
+            background: linear-gradient(160deg, #1B2332 0%, #2D3A4F 40%, #1B2332 100%);
+            color: white;
+        }
+        .title-slide h1 { color: white; }
+        .title-slide p { color: rgba(255,255,255,0.7); }
+        .title-slide .subtitle {
+            font-size: clamp(0.9rem, 2vw, 1.5rem);
+            color: rgba(255,255,255,0.85);
+            font-weight: 400;
+        }
+        .title-slide .meta {
+            font-size: var(--small-size);
+            color: rgba(255,255,255,0.5);
+        }
+        .title-geo {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.08;
+            z-index: 0;
+        }
+        .title-geo-1 {
+            width: clamp(200px, 40vw, 500px);
+            height: clamp(200px, 40vw, 500px);
+            background: var(--accent-blue);
+            top: -10%;
+            right: -5%;
+        }
+        .title-geo-2 {
+            width: clamp(100px, 20vw, 250px);
+            height: clamp(100px, 20vw, 250px);
+            background: var(--accent-orange);
+            bottom: 10%;
+            left: 5%;
+        }
+        .title-geo-3 {
+            width: clamp(60px, 10vw, 120px);
+            height: clamp(60px, 10vw, 120px);
+            background: var(--accent-emerald);
+            top: 20%;
+            left: 30%;
+        }
+
+        /* === SECTION DIVIDER SLIDE === */
+        .section-slide {
+            background: var(--bg-card);
+            border-bottom: 4px solid var(--accent-blue);
+        }
+        .section-slide .big-num {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 10vw, 8rem);
+            font-weight: 800;
+            color: var(--accent-blue);
+            opacity: 0.15;
+            line-height: 1;
+        }
+
+        /* === COMPARISON VISUAL === */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: clamp(0.2rem, 0.5vw, 0.4rem);
+        }
+        .comparison-grid .comp-header {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: var(--small-size);
+            text-align: center;
+            padding: clamp(0.2rem, 0.5vw, 0.4rem);
+            border-radius: clamp(4px, 0.5vw, 6px);
+        }
+        .comparison-grid .comp-cell {
+            font-size: clamp(0.55rem, 0.85vw, 0.75rem);
+            text-align: center;
+            padding: clamp(0.15rem, 0.4vw, 0.35rem);
+            background: var(--bg-card);
+            border-radius: clamp(3px, 0.4vw, 5px);
+            border: 1px solid var(--border-light);
+            line-height: 1.3;
+        }
+
+        /* === 3D SCENE VISUAL (CSS-generated abstract) === */
+        .scene-visual {
+            position: relative;
+            width: 100%;
+            height: clamp(120px, 20vh, 200px);
+            background: linear-gradient(135deg, rgba(37,99,235,0.04), rgba(249,115,22,0.04));
+            border-radius: clamp(8px, 1.5vw, 16px);
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+        }
+        .scene-dot {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            opacity: 0.6;
+        }
+        .scene-line {
+            position: absolute;
+            height: 1px;
+            background: var(--accent-blue);
+            opacity: 0.2;
+            transform-origin: left center;
+        }
+        .scene-cam {
+            position: absolute;
+            width: clamp(16px, 2vw, 24px);
+            height: clamp(12px, 1.5vw, 18px);
+            border: 2px solid var(--accent-orange);
+            border-radius: 3px;
+        }
+        .scene-cam::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            transform: translateY(-50%);
+            border-left: 6px solid var(--accent-orange);
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+        }
+
+        /* === ANIMATIONS === */
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal:nth-child(1) { transition-delay: 0.05s; }
+        .reveal:nth-child(2) { transition-delay: 0.12s; }
+        .reveal:nth-child(3) { transition-delay: 0.19s; }
+        .reveal:nth-child(4) { transition-delay: 0.26s; }
+        .reveal:nth-child(5) { transition-delay: 0.33s; }
+        .reveal:nth-child(6) { transition-delay: 0.40s; }
+        .reveal:nth-child(7) { transition-delay: 0.47s; }
+        .reveal:nth-child(8) { transition-delay: 0.54s; }
+
+        /* Scale reveal for cards */
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.5s var(--ease-out-expo),
+                        transform 0.5s var(--ease-out-expo);
+        }
+        .slide.visible .reveal-scale { opacity: 1; transform: scale(1); }
+
+        /* Floating animation for decorative elements */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(clamp(-6px, -1vh, -12px)); }
+        }
+        .float { animation: float 4s ease-in-out infinite; }
+        .float-delayed { animation: float 4s ease-in-out 1s infinite; }
+
+        /* Pulse for emphasis */
+        @keyframes pulse-border {
+            0%, 100% { border-color: var(--accent-blue); }
+            50% { border-color: var(--accent-orange); }
+        }
+
+        /* Point cloud scatter animation */
+        @keyframes scatter-in {
+            from { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+            to { opacity: 0.6; transform: translate(0, 0) scale(1); }
+        }
+        .scene-dot.animated {
+            animation: scatter-in 0.8s var(--ease-out-expo) forwards;
+            animation-delay: var(--delay, 0s);
+            opacity: 0;
+        }
+
+        /* === PROGRESS BAR === */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-orange));
+            z-index: 9999;
+            transition: width 0.3s ease;
+        }
+
+        /* === NAV DOTS === */
+        .nav-dots {
+            position: fixed;
+            right: clamp(0.5rem, 1.5vw, 1.5rem);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(4px, 0.6vh, 8px);
+            z-index: 9998;
+        }
+        .nav-dot {
+            width: clamp(6px, 0.8vw, 10px);
+            height: clamp(6px, 0.8vw, 10px);
+            border-radius: 50%;
+            background: var(--text-muted);
+            opacity: 0.3;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            padding: 0;
+        }
+        .nav-dot.active {
+            opacity: 1;
+            background: var(--accent-blue);
+            transform: scale(1.3);
+        }
+
+        /* === SLIDE COUNTER === */
+        .slide-counter {
+            position: fixed;
+            bottom: clamp(0.5rem, 1.5vw, 1.5rem);
+            right: clamp(0.5rem, 1.5vw, 1.5rem);
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            color: var(--text-muted);
+            z-index: 9998;
+        }
+        .title-slide ~ .slide-counter { color: rgba(255,255,255,0.4); }
+
+        /* === SPECIAL: EQUATION === */
+        .equation {
+            font-family: var(--font-mono);
+            font-size: clamp(0.8rem, 1.5vw, 1.1rem);
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: clamp(6px, 1vw, 12px);
+            padding: clamp(0.5rem, 1.5vw, 1rem) clamp(1rem, 2vw, 2rem);
+            text-align: center;
+            box-shadow: var(--shadow-soft);
+        }
+
+        /* === LIST STYLES === */
+        ul, ol {
+            padding-left: clamp(1rem, 2vw, 1.5rem);
+        }
+        li {
+            margin-bottom: clamp(0.15rem, 0.4vh, 0.3rem);
+        }
+        li::marker {
+            color: var(--accent-blue);
+        }
+
+        /* Inline editing is off for this presentation */
+
+        @media (max-width: 600px) {
+            .cols { flex-direction: column; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .pipeline-strip { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Navigation dots -->
+<nav class="nav-dots" id="navDots" aria-label="Slide navigation"></nav>
+
+<!-- Slide counter -->
+<div class="slide-counter" id="slideCounter"></div>
+
+
+<!-- ===========================================
+     SLIDE 1: TITLE
+     =========================================== -->
+<section class="slide title-slide" id="slide-1">
+    <div class="title-geo title-geo-1"></div>
+    <div class="title-geo title-geo-2"></div>
+    <div class="title-geo title-geo-3"></div>
+    <div class="slide-content" style="z-index:1; align-items: flex-start; justify-content: flex-end; padding-bottom: clamp(3rem, 8vh, 6rem);">
+        <p class="reveal meta" style="margin-bottom: var(--element-gap);">Лекція 8 &mdash; Модуль 2: Комп'ютерний зір для ігор</p>
+        <h1 class="reveal" style="max-width: 80%;">Від фотографій<br>до ігрових світів</h1>
+        <p class="reveal subtitle" style="margin-top: var(--element-gap); max-width: 70%;">3D-реконструкція, детекція об'єктів та розуміння сцен</p>
+        <p class="reveal meta" style="margin-top: var(--content-gap);">Штучний інтелект в ігрових застосунках &bull; Львівська Політехніка</p>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 2: HOOK
+     =========================================== -->
+<section class="slide" id="slide-2">
+    <div class="slide-content" style="align-items: center; text-align: center;">
+        <h2 class="reveal" style="font-size: var(--title-size); max-width: 80%; margin: 0 auto;">Що, якщо за годину перетворити фото зі смартфона на ігровий рівень?</h2>
+        <p class="reveal" style="margin-top: var(--content-gap); max-width: 60%; margin-left: auto; margin-right: auto;">
+            Сьогодні ми розберемо, як це працює &mdash; від математики паралаксу до реальних пайплайнів AAA-студій.
+        </p>
+        <div class="reveal" style="margin-top: var(--content-gap); display: flex; gap: clamp(0.5rem, 1.5vw, 1rem); justify-content: center; flex-wrap: wrap;">
+            <span class="tag blue">Structure from Motion</span>
+            <span class="tag orange">Детекція об'єктів</span>
+            <span class="tag emerald">Сегментація</span>
+            <span class="tag violet">Нейронний рендеринг</span>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 3: FROM 2D TO 3D
+     =========================================== -->
+<section class="slide" id="slide-3">
+    <span class="section-num">01</span>
+    <div class="slide-content">
+        <h2 class="reveal">Від 2D до 3D: як отримати глибину?</h2>
+        <p class="reveal" style="margin-bottom: var(--content-gap);">CNN аналізують зображення, але ігри та роботи живуть у <strong>тривимірному просторі</strong>. Три підходи:</p>
+        <div class="cols">
+            <div class="info-card accent-rose reveal">
+                <h3>Датчики глибини</h3>
+                <p>LiDAR, стереокамери, ToF-сенсори</p>
+                <p style="margin-top: var(--element-gap);"><span class="tag rose">Точно, але дорого</span></p>
+            </div>
+            <div class="info-card accent-orange reveal">
+                <h3>Моноколярна оцінка</h3>
+                <p>Нейромережа передбачає глибину з одного фото</p>
+                <p style="margin-top: var(--element-gap);"><span class="tag orange">Швидко, але приблизно</span></p>
+            </div>
+            <div class="info-card accent-blue reveal">
+                <h3>SfM &mdash; Structure from Motion</h3>
+                <p>Геометрична реконструкція з набору звичайних фотографій</p>
+                <p style="margin-top: var(--element-gap);"><span class="tag blue">Достатньо смартфона</span></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 4: PARALLAX INTUITION
+     =========================================== -->
+<section class="slide" id="slide-4">
+    <div class="slide-content" style="align-items: center;">
+        <h2 class="reveal">Паралакс: як ми бачимо глибину</h2>
+
+        <!-- CSS-generated parallax diagram -->
+        <div class="reveal" style="position: relative; width: min(90%, 700px); height: clamp(150px, 25vh, 250px); margin: var(--content-gap) auto;">
+            <!-- Two eyes/cameras -->
+            <div style="position: absolute; left: 25%; bottom: 10%; display: flex; flex-direction: column; align-items: center;">
+                <div style="width: clamp(30px, 4vw, 50px); height: clamp(22px, 3vw, 36px); border: 3px solid var(--accent-blue); border-radius: 6px; position: relative;">
+                    <div style="position: absolute; top: 50%; right: calc(-1 * clamp(4px, 0.6vw, 8px)); transform: translateY(-50%); width: 0; height: 0; border-left: clamp(6px, 0.8vw, 10px) solid var(--accent-blue); border-top: clamp(4px, 0.5vw, 7px) solid transparent; border-bottom: clamp(4px, 0.5vw, 7px) solid transparent;"></div>
+                </div>
+                <span style="font-size: var(--small-size); color: var(--accent-blue); font-weight: 600; margin-top: 0.3em;">Камера 1</span>
+            </div>
+            <div style="position: absolute; right: 25%; bottom: 10%; display: flex; flex-direction: column; align-items: center;">
+                <div style="width: clamp(30px, 4vw, 50px); height: clamp(22px, 3vw, 36px); border: 3px solid var(--accent-orange); border-radius: 6px; position: relative;">
+                    <div style="position: absolute; top: 50%; left: calc(-1 * clamp(4px, 0.6vw, 8px)); transform: translateY(-50%); width: 0; height: 0; border-right: clamp(6px, 0.8vw, 10px) solid var(--accent-orange); border-top: clamp(4px, 0.5vw, 7px) solid transparent; border-bottom: clamp(4px, 0.5vw, 7px) solid transparent;"></div>
+                </div>
+                <span style="font-size: var(--small-size); color: var(--accent-orange); font-weight: 600; margin-top: 0.3em;">Камера 2</span>
+            </div>
+            <!-- 3D point -->
+            <div class="float" style="position: absolute; top: 10%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;">
+                <div style="width: clamp(12px, 1.5vw, 20px); height: clamp(12px, 1.5vw, 20px); background: var(--accent-emerald); border-radius: 50%; box-shadow: 0 0 12px rgba(16,185,129,0.4);"></div>
+                <span style="font-size: var(--small-size); color: var(--accent-emerald); font-weight: 600; margin-top: 0.3em;">3D точка</span>
+            </div>
+            <!-- Dashed lines from cameras to point -->
+            <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                <line x1="30%" y1="80%" x2="50%" y2="18%" stroke="#2563EB" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.5"/>
+                <line x1="70%" y1="80%" x2="50%" y2="18%" stroke="#F97316" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.5"/>
+            </svg>
+        </div>
+
+        <div class="highlight-box reveal" style="max-width: min(90%, 600px); margin: 0 auto; text-align: center;">
+            <p><strong>Два погляди на одну точку</strong> &rarr; <strong>тріангуляція</strong> &rarr; <strong>3D-координати</strong></p>
+            <p style="margin-top: 0.3em;">Людський зір використовує паралакс від двох очей. Камера, що рухається &mdash; це «віртуальне друге око».</p>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 5: SFM DEFINITION
+     =========================================== -->
+<section class="slide" id="slide-5">
+    <div class="slide-content">
+        <h2 class="reveal">Structure from Motion &mdash; що це?</h2>
+
+        <div class="info-card accent-blue reveal" style="max-width: min(90%, 700px); margin: var(--content-gap) auto; text-align: center;">
+            <p style="font-size: var(--h3-size); font-weight: 600; color: var(--text-primary);">
+                Одночасне відновлення <strong style="color: var(--accent-blue);">структури сцени</strong> (3D-координати точок)<br>
+                та <strong style="color: var(--accent-orange);">руху камери</strong> (положення + орієнтація)<br>
+                з набору <em>неструктурованих фотографій</em>
+            </p>
+        </div>
+
+        <div class="cols reveal" style="max-width: min(90%, 700px); margin: 0 auto;">
+            <div style="text-align: center;">
+                <span class="tag blue" style="font-size: var(--body-size);">Вхід</span>
+                <p style="margin-top: 0.3em;">Набір звичайних фото<br>(будь-який порядок)</p>
+            </div>
+            <div style="text-align: center; font-size: clamp(1.5rem, 3vw, 2.5rem); color: var(--text-muted); align-self: center;">&rarr;</div>
+            <div style="text-align: center;">
+                <span class="tag emerald" style="font-size: var(--body-size);">Вихід</span>
+                <p style="margin-top: 0.3em;">Розріджена хмара 3D-точок<br>+ калібровані пози камер</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 6: SFM PIPELINE OVERVIEW
+     =========================================== -->
+<section class="slide" id="slide-6">
+    <div class="slide-content">
+        <h2 class="reveal">Інкрементальний SfM: 7 кроків</h2>
+
+        <!-- Pipeline strip visualization -->
+        <div class="pipeline-strip reveal" style="margin: var(--content-gap) 0;">
+            <div class="pipeline-step" style="background: #3B82F6;">
+                <span class="step-num">1</span>
+                <span class="step-label">Виділення ознак</span>
+            </div>
+            <div class="pipeline-step" style="background: #2563EB;">
+                <span class="step-num">2</span>
+                <span class="step-label">Зіставлення</span>
+            </div>
+            <div class="pipeline-step" style="background: #1D4ED8;">
+                <span class="step-num">3</span>
+                <span class="step-label">Верифікація</span>
+            </div>
+            <div class="pipeline-step" style="background: #F97316;">
+                <span class="step-num">4</span>
+                <span class="step-label">Ініціалізація</span>
+            </div>
+            <div class="pipeline-step" style="background: #EA580C;">
+                <span class="step-num">5</span>
+                <span class="step-label">Реєстрація</span>
+            </div>
+            <div class="pipeline-step" style="background: #10B981;">
+                <span class="step-num">6</span>
+                <span class="step-label">Тріангуляція</span>
+            </div>
+            <div class="pipeline-step" style="background: #059669;">
+                <span class="step-num">7</span>
+                <span class="step-label">Bundle Adjustment</span>
+            </div>
+        </div>
+
+        <div class="cols" style="margin-top: var(--element-gap);">
+            <div class="info-card accent-blue reveal">
+                <p><strong>Кроки 1&ndash;3:</strong> Від пікселів до геометрії &mdash; знаходимо спільні точки між фотографіями</p>
+            </div>
+            <div class="info-card accent-orange reveal">
+                <p><strong>Кроки 4&ndash;6:</strong> Нарощування моделі &mdash; додаємо нові камери та точки одну за одною</p>
+            </div>
+            <div class="info-card accent-emerald reveal">
+                <p><strong>Крок 7:</strong> Глобальна оптимізація &mdash; уточнюємо все одразу</p>
+            </div>
+        </div>
+
+        <p class="reveal" style="text-align: center; margin-top: var(--element-gap); color: var(--text-muted);">Кроки 5&ndash;7 <strong>повторюються</strong> для кожного нового зображення</p>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 7: STEPS 1-3
+     =========================================== -->
+<section class="slide" id="slide-7">
+    <span class="section-num" style="color: rgba(37,99,235,0.08);">1-3</span>
+    <div class="slide-content">
+        <h2 class="reveal">Від пікселів до геометрії</h2>
+        <div class="rows" style="gap: var(--element-gap);">
+            <div class="info-card accent-blue reveal">
+                <div class="cols" style="align-items: center;">
+                    <div style="flex: 0 0 auto;"><span class="tag blue" style="font-size: var(--h3-size);">1</span></div>
+                    <div>
+                        <h3>Виділення ознак</h3>
+                        <p>SIFT / SuperPoint знаходять точки, інваріантні до масштабу, повороту, освітлення. Кожна точка отримує числовий <strong>дескриптор</strong>.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="info-card accent-blue reveal">
+                <div class="cols" style="align-items: center;">
+                    <div style="flex: 0 0 auto;"><span class="tag blue" style="font-size: var(--h3-size);">2</span></div>
+                    <div>
+                        <h3>Зіставлення (matching)</h3>
+                        <p>Порівняння дескрипторів між парами фото. Результат: пари відповідних точок &mdash; «ця точка на фото A = ця точка на фото B».</p>
+                    </div>
+                </div>
+            </div>
+            <div class="info-card accent-orange reveal">
+                <div class="cols" style="align-items: center;">
+                    <div style="flex: 0 0 auto;"><span class="tag orange" style="font-size: var(--h3-size);">3</span></div>
+                    <div>
+                        <h3>Геометрична верифікація</h3>
+                        <p>RANSAC оцінює <strong>фундаментальну матрицю</strong> &mdash; геометричне відношення між двома видами. Хибні пари (outliers) відкидаються.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="reveal" style="text-align: center; margin-top: var(--element-gap);">Результат: очищений <strong>граф сцени</strong> &mdash; які зображення пов'язані геометрично</p>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 8: STEPS 4-7
+     =========================================== -->
+<section class="slide" id="slide-8">
+    <span class="section-num" style="color: rgba(249,115,22,0.08);">4-7</span>
+    <div class="slide-content">
+        <h2 class="reveal">Нарощування 3D-моделі</h2>
+        <div class="rows" style="gap: var(--element-gap);">
+            <div class="info-card accent-orange reveal">
+                <div class="cols" style="align-items: center;">
+                    <div style="flex: 0 0 auto;"><span class="tag orange" style="font-size: var(--h3-size);">4</span></div>
+                    <div>
+                        <h3>Ініціалізація</h3>
+                        <p>Обрати пару фото з великою базою (baseline) &rarr; тріангулювати початкові 3D-точки.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="info-card accent-orange reveal">
+                <div class="cols" style="align-items: center;">
+                    <div style="flex: 0 0 auto;"><span class="tag orange" style="font-size: var(--h3-size);">5</span></div>
+                    <div>
+                        <h3>Реєстрація нових камер</h3>
+                        <p>Для кожного нового фото: знайти відповідності з уже відомими 3D-точками &rarr; <strong>PnP</strong> (Perspective-n-Point) &rarr; поза камери.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="info-card accent-emerald reveal">
+                <div class="cols" style="align-items: center;">
+                    <div style="flex: 0 0 auto;"><span class="tag emerald" style="font-size: var(--h3-size);">6</span></div>
+                    <div>
+                        <h3>Тріангуляція</h3>
+                        <p>Нова камера створює нові пари точок &rarr; обчислити нові 3D-координати &rarr; хмара зростає.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="info-card accent-emerald reveal">
+                <div class="cols" style="align-items: center;">
+                    <div style="flex: 0 0 auto;"><span class="tag emerald" style="font-size: var(--h3-size);">7</span></div>
+                    <div>
+                        <h3>Bundle Adjustment</h3>
+                        <p>Глобальна оптимізація &mdash; уточнити <em>всі</em> пози камер та <em>всі</em> 3D-точки одночасно.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 9: BUNDLE ADJUSTMENT
+     =========================================== -->
+<section class="slide" id="slide-9">
+    <div class="slide-content" style="align-items: center;">
+        <h2 class="reveal">Bundle Adjustment: серце SfM</h2>
+
+        <div class="equation reveal" style="margin: var(--content-gap) auto;">
+            min<sub><strong>X,P</strong></sub> &nbsp; &Sigma;<sub>i</sub> &Sigma;<sub>j</sub> &Vert; <strong>x</strong><sub>ij</sub> &minus; &pi;(<strong>P</strong><sub>j</sub>, <strong>X</strong><sub>i</sub>) &Vert;<sup>2</sup>
+        </div>
+
+        <div class="cols reveal" style="max-width: min(90%, 700px); margin: var(--content-gap) auto;">
+            <div class="info-card accent-blue" style="text-align: center;">
+                <p><strong>X<sub>i</sub></strong> &mdash; 3D-координати i-тої точки</p>
+                <p><strong>P<sub>j</sub></strong> &mdash; параметри j-тої камери</p>
+            </div>
+            <div class="info-card accent-orange" style="text-align: center;">
+                <p><strong>&pi;</strong> &mdash; функція проекції 3D &rarr; 2D</p>
+                <p><strong>x<sub>ij</sub></strong> &mdash; спостережувані 2D-координати</p>
+            </div>
+        </div>
+
+        <div class="highlight-box reveal" style="max-width: min(90%, 600px); margin: var(--element-gap) auto; text-align: center;">
+            <p><strong style="color: var(--accent-rose);">Мінімізуємо помилку репроекції</strong> &mdash; різницю між тим, де точка є на фото, і де б вона <em>мала бути</em> за нашою 3D-моделлю.</p>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 10: COMPARISON TABLE
+     =========================================== -->
+<section class="slide" id="slide-10">
+    <div class="slide-content">
+        <h2 class="reveal">SfM у контексті: споріднені методи</h2>
+        <div class="reveal" style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th style="background: var(--accent-blue);">SfM</th>
+                        <th style="background: var(--accent-orange);">MVS</th>
+                        <th style="background: var(--accent-emerald);">SLAM</th>
+                        <th style="background: var(--accent-violet);">NeRF</th>
+                        <th style="background: var(--accent-rose);">3DGS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Вхід</strong></td>
+                        <td>Фото</td>
+                        <td>SfM-результат</td>
+                        <td>Відео (live)</td>
+                        <td>Фото + SfM-пози</td>
+                        <td>Фото + SfM-пози</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Вихід</strong></td>
+                        <td>Хмара + пози</td>
+                        <td>Щільний меш</td>
+                        <td>Поза + карта</td>
+                        <td>Нові ракурси</td>
+                        <td>Нові ракурси</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Швидкість</strong></td>
+                        <td>Офлайн</td>
+                        <td>Офлайн</td>
+                        <td><strong>30+ Hz</strong></td>
+                        <td>Години</td>
+                        <td>30&ndash;60 хв</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Рендер</strong></td>
+                        <td>&mdash;</td>
+                        <td>Низька якість</td>
+                        <td>&mdash;</td>
+                        <td>Фотореалістичний</td>
+                        <td><strong>90+ FPS</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="highlight-box reveal" style="margin-top: var(--content-gap); text-align: center;">
+            <p><strong>SfM &mdash; фундамент.</strong> NeRF і 3DGS використовують пози камер від COLMAP як вхідні дані. SfM дає «скелет», а нейронні методи &mdash; зовнішній вигляд.</p>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 11: SFM TOOLS
+     =========================================== -->
+<section class="slide" id="slide-11">
+    <div class="slide-content">
+        <h2 class="reveal">Інструменти SfM</h2>
+        <div class="cols">
+            <div class="info-card accent-blue reveal">
+                <h3>COLMAP</h3>
+                <p>Open source, C++. Золотий стандарт точності. CLI + GUI.</p>
+                <p style="margin-top: var(--element-gap);"><span class="tag blue">Найпопулярніший у дослідженнях</span></p>
+            </div>
+            <div class="info-card accent-orange reveal">
+                <h3>RealityCapture</h3>
+                <p>Комерційний (Epic Games). Найшвидший на ринку. Безкоштовний при доході &lt; $1M.</p>
+                <p style="margin-top: var(--element-gap);"><span class="tag orange">Інтеграція з UE5</span></p>
+            </div>
+            <div class="info-card accent-emerald reveal">
+                <h3>Meshroom / AliceVision</h3>
+                <p>Open source. GUI на нодах &mdash; візуальне програмування пайплайну.</p>
+                <p style="margin-top: var(--element-gap);"><span class="tag emerald">Зручний для навчання</span></p>
+            </div>
+        </div>
+        <p class="reveal" style="text-align: center; margin-top: var(--content-gap);">Більшість робіт з NeRF і 3DGS використовують <strong>COLMAP</strong> для обчислення позицій камер.</p>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 12: DRONES — OVERVIEW
+     =========================================== -->
+<section class="slide" id="slide-12">
+    <span class="section-num">02</span>
+    <div class="slide-content">
+        <h2 class="reveal">SfM у навігації дронів</h2>
+        <div class="cols">
+            <div class="info-card accent-blue reveal">
+                <h3>До польоту <span class="tag blue">SfM</span></h3>
+                <ul>
+                    <li>Зйомка з перекриттям</li>
+                    <li>SfM + MVS на сервері</li>
+                    <li>Ортофотоплан + цифрова модель поверхні</li>
+                </ul>
+                <p style="margin-top: var(--element-gap); font-size: var(--small-size); color: var(--text-muted);">Pix4D, OpenDroneMap, DJI Terra</p>
+            </div>
+            <div class="info-card accent-emerald reveal">
+                <h3>Під час польоту <span class="tag emerald">SLAM</span></h3>
+                <ul>
+                    <li>VIO: камера + IMU, 30+ Hz</li>
+                    <li>ORB-SLAM3, VINS-Mono</li>
+                    <li>SfM-карта як <em>апріорна</em> інформація</li>
+                </ul>
+                <p style="margin-top: var(--element-gap); font-size: var(--small-size); color: var(--text-muted);">SfM надто повільний для live-уникнення перешкод</p>
+            </div>
+        </div>
+        <div class="info-card accent-rose reveal" style="margin-top: var(--content-gap);">
+            <p><strong style="color: var(--accent-rose);">Проблема масштабу:</strong> монокулярний SfM не знає реальних розмірів. 1 м чи 10 м &mdash; для дрона це критично. Розв'язання: GPS-мітки, IMU, відомі об'єкти.</p>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 13: PHOTOGRAMMETRY PIPELINE
+     =========================================== -->
+<section class="slide" id="slide-13">
+    <span class="section-num">03</span>
+    <div class="slide-content">
+        <h2 class="reveal">Від реального світу до ігрового рівня</h2>
+
+        <!-- Visual pipeline with CSS -->
+        <div class="diagram-flow reveal" style="margin: var(--content-gap) 0; flex-wrap: wrap; justify-content: center;">
+            <div class="diagram-box blue">Зйомка<br><span style="font-weight: 400; font-size: 0.85em;">DSLR / дрон / телефон</span></div>
+            <span class="diagram-arrow">&rarr;</span>
+            <div class="diagram-box blue">SfM<br><span style="font-weight: 400; font-size: 0.85em;">хмара + пози</span></div>
+            <span class="diagram-arrow">&rarr;</span>
+            <div class="diagram-box orange">MVS<br><span style="font-weight: 400; font-size: 0.85em;">щільний меш</span></div>
+            <span class="diagram-arrow">&rarr;</span>
+            <div class="diagram-box emerald">Cleanup<br><span style="font-weight: 400; font-size: 0.85em;">ретопологія, UV, PBR</span></div>
+            <span class="diagram-arrow">&rarr;</span>
+            <div class="diagram-box violet">Рушій<br><span style="font-weight: 400; font-size: 0.85em;">UE5 / Unity</span></div>
+        </div>
+
+        <div class="cols">
+            <div class="info-card accent-blue reveal" style="flex: 2;">
+                <h3>Хто це використовує</h3>
+                <ul>
+                    <li><strong>EA DICE</strong> (Battlefield) &mdash; фотографування реальних локацій</li>
+                    <li><strong>Infinity Ward</strong> (CoD: MW) &mdash; сканування середовищ</li>
+                    <li><strong>DICE</strong> (Star Wars Battlefront) &mdash; скани декорацій фільму</li>
+                    <li><strong>Quixel Megascans</strong> (Epic) &mdash; 18 000+ сканованих ассетів</li>
+                </ul>
+            </div>
+            <div class="info-card accent-emerald reveal" style="flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;">
+                <p style="font-size: var(--h3-size); font-weight: 700; color: var(--accent-emerald);">Економить місяці ручного 3D-моделювання</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 14: NERF & 3DGS
+     =========================================== -->
+<section class="slide" id="slide-14">
+    <div class="slide-content">
+        <h2 class="reveal">Нейронний рендеринг: NeRF та 3D Gaussian Splatting</h2>
+        <div class="cols">
+            <div class="info-card accent-violet reveal">
+                <h3 style="color: var(--accent-violet);">NeRF</h3>
+                <p>Нейромережа вивчає функцію:</p>
+                <div class="equation" style="margin: var(--element-gap) 0; font-size: var(--small-size);">
+                    f(<strong>x</strong>, <strong>d</strong>) &rarr; (колір, щільність)
+                </div>
+                <p><span class="tag violet">Тренування: години</span> <span class="tag rose">Рендер: сек/кадр</span></p>
+            </div>
+            <div class="info-card accent-rose reveal">
+                <h3 style="color: var(--accent-rose);">3D Gaussian Splatting</h3>
+                <p>Набір 3D-еліпсоїдів з кольором. Диференційована растеризація.</p>
+                <div style="margin: var(--element-gap) 0; padding: 0.4em; background: rgba(225,29,72,0.06); border-radius: 8px; text-align: center;">
+                    <strong>Тренування:</strong> 30&ndash;60 хв &bull; <strong style="color: var(--accent-emerald);">Рендер: 90+ FPS</strong>
+                </div>
+                <p style="margin-top: var(--element-gap);">glTF: <code>KHR_gaussian_splatting</code> (серпень 2025)</p>
+            </div>
+        </div>
+        <div class="highlight-box reveal" style="margin-top: var(--content-gap); text-align: center;">
+            <p>Обидва методи використовують <strong>COLMAP-пози</strong> як вхід. SfM дає структуру &mdash; нейронні методи дають <strong>фотореалістичний вигляд</strong>.</p>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 15: 3DGS LIMITATIONS & HYBRID
+     =========================================== -->
+<section class="slide" id="slide-15">
+    <div class="slide-content">
+        <h2 class="reveal">3DGS для ігор: можливості та обмеження</h2>
+        <div class="cols">
+            <div class="info-card accent-rose reveal">
+                <h3>Чого немає</h3>
+                <ul>
+                    <li>Полігональний меш &rarr; немає колізій</li>
+                    <li>Фізика &mdash; об'єкти не взаємодіють</li>
+                    <li>LOD &mdash; складно оптимізувати</li>
+                    <li>Обмежене редагування</li>
+                </ul>
+            </div>
+            <div class="info-card accent-emerald reveal">
+                <h3>Де вже працює</h3>
+                <ul>
+                    <li>Кінематографічні фони</li>
+                    <li>VR-середовища</li>
+                    <li>Швидкий прототипінг рівнів</li>
+                    <li>Превізуалізація</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3 class="reveal" style="margin-top: var(--content-gap);">Гібридний конвеєр (поточна практика)</h3>
+        <!-- Branching diagram -->
+        <div class="reveal" style="display: flex; align-items: center; justify-content: center; gap: clamp(0.3rem, 0.8vw, 0.6rem); margin-top: var(--element-gap); flex-wrap: wrap;">
+            <div class="diagram-box blue">Відео / фото</div>
+            <span class="diagram-arrow">&rarr;</span>
+            <div class="diagram-box blue">COLMAP<br><span style="font-weight:400; font-size: 0.85em;">пози камер</span></div>
+            <span class="diagram-arrow">&rarr;</span>
+            <div style="display: flex; flex-direction: column; gap: clamp(0.2rem, 0.4vw, 0.4rem);">
+                <div class="diagram-box violet" style="font-size: clamp(0.5rem, 0.8vw, 0.7rem);">3DGS &rarr; візуальний фон</div>
+                <div class="diagram-box orange" style="font-size: clamp(0.5rem, 0.8vw, 0.7rem);">MVS &rarr; меш для колізій</div>
+            </div>
+            <span class="diagram-arrow">&rarr;</span>
+            <div class="diagram-box emerald">UE5</div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 16: SECTION DIVIDER — CV IN GAMES
+     =========================================== -->
+<section class="slide section-slide" id="slide-16">
+    <div class="slide-content" style="align-items: center; text-align: center;">
+        <p class="reveal big-num">II</p>
+        <h1 class="reveal" style="margin-top: var(--element-gap);">Комп'ютерний зір<br>у розробці ігор</h1>
+        <p class="reveal" style="margin-top: var(--content-gap); max-width: 60%;">Детекція об'єктів, сегментація, Vision Transformers &mdash; як ігри починають «бачити»</p>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 17: CV TASKS OVERVIEW
+     =========================================== -->
+<section class="slide" id="slide-17">
+    <span class="section-num">04</span>
+    <div class="slide-content">
+        <h2 class="reveal">Задачі комп'ютерного зору: зростаюча деталізація</h2>
+
+        <!-- Visual progression -->
+        <div class="cols" style="margin: var(--content-gap) 0;">
+            <div class="info-card reveal" style="text-align: center; border-top: 4px solid var(--accent-blue);">
+                <div style="font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 0.2em;">🏷️</div>
+                <h3>Класифікація</h3>
+                <p>«На фото &mdash; кіт»</p>
+                <p style="font-size: var(--small-size); color: var(--text-muted);">1 мітка на зображення</p>
+            </div>
+            <div class="info-card reveal" style="text-align: center; border-top: 4px solid var(--accent-orange);">
+                <div style="font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 0.2em;">📦</div>
+                <h3>Детекція</h3>
+                <p>«Кіт — тут» (рамка)</p>
+                <p style="font-size: var(--small-size); color: var(--text-muted);">Рамки + класи + впевненість</p>
+            </div>
+            <div class="info-card reveal" style="text-align: center; border-top: 4px solid var(--accent-emerald);">
+                <div style="font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 0.2em;">🎨</div>
+                <h3>Сегментація</h3>
+                <p>«Ось ці пікселі — кіт»</p>
+                <p style="font-size: var(--small-size); color: var(--text-muted);">Попіксельна маска</p>
+            </div>
+        </div>
+
+        <p class="reveal" style="text-align: center;">Три напрямки CV в іграх: <span class="tag rose">Всередині гри</span> <span class="tag blue">У розробці</span> <span class="tag violet">Навколо гри</span></p>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 18: OBJECT DETECTION — YOLO
+     =========================================== -->
+<section class="slide" id="slide-18">
+    <div class="slide-content">
+        <h2 class="reveal">Детекція об'єктів: YOLO та еволюція</h2>
+        <div class="cols">
+            <div class="info-card accent-blue reveal">
+                <h3>Двоетапні (Two-stage)</h3>
+                <ul>
+                    <li><strong>R-CNN</strong> (2014): Selective Search + CNN</li>
+                    <li><strong>Fast R-CNN</strong>: CNN один раз</li>
+                    <li><strong>Faster R-CNN</strong>: Region Proposal Network</li>
+                </ul>
+                <p style="margin-top: var(--element-gap);"><span class="tag rose">~5 FPS &mdash; точно, але повільно</span></p>
+            </div>
+            <div class="info-card accent-emerald reveal">
+                <h3>Одноетапні (One-stage)</h3>
+                <ul>
+                    <li><strong>YOLO</strong>: сітка S&times;S, один прохід</li>
+                    <li><strong>SSD</strong>: multi-scale feature maps</li>
+                    <li><strong>RetinaNet</strong>: Focal Loss</li>
+                </ul>
+                <p style="margin-top: var(--element-gap);"><span class="tag emerald">400+ FPS &mdash; реальний час!</span></p>
+            </div>
+        </div>
+
+        <div class="cols reveal" style="margin-top: var(--content-gap);">
+            <div class="info-card accent-orange" style="text-align: center;">
+                <p><strong>IoU</strong> (Intersection over Union) &mdash; метрика збігу рамок.</p>
+                <p>IoU &ge; 0.5 &rarr; об'єкт «знайдено»</p>
+            </div>
+            <div class="info-card accent-violet" style="text-align: center;">
+                <p><strong>mAP</strong> &mdash; середня точність по всіх класах.</p>
+                <p><strong>mAP@50:95</strong> &mdash; основний бенчмарк COCO</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 19: DETECTION IN GAMES
+     =========================================== -->
+<section class="slide" id="slide-19">
+    <div class="slide-content">
+        <h2 class="reveal">Детекція в іграх: 4 застосування</h2>
+        <div class="cols" style="flex-wrap: wrap;">
+            <div class="info-card accent-blue reveal" style="min-width: min(100%, 250px);">
+                <h3>NPC-зір <span class="tag rose">В грі</span></h3>
+                <p>Поступове розпізнавання, обмежене поле зору, контекстна обізнаність. <em>MineRL, MineDojo (NVIDIA)</em></p>
+            </div>
+            <div class="info-card accent-rose reveal" style="min-width: min(100%, 250px);">
+                <h3>Античіт <span class="tag violet">Навколо</span></h3>
+                <p>Детекція оверлеїв, аналіз руху прицілу, відеоаналіз стрімів. <em>Riot Games, Easy Anti-Cheat</em></p>
+            </div>
+            <div class="info-card accent-emerald reveal" style="min-width: min(100%, 250px);">
+                <h3>Автоматичне QA <span class="tag blue">Розробка</span></h3>
+                <p>Графічні артефакти, z-fighting, UI-перевірка, порівняння білдів. <em>EA AutoPlay, Ubisoft La Forge</em></p>
+            </div>
+            <div class="info-card accent-orange reveal" style="min-width: min(100%, 250px);">
+                <h3>Кіберспорт <span class="tag violet">Навколо</span></h3>
+                <p>Позиції гравців, теплові карти, highlight detection. <em>GRID / Bayes Esports</em></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 20: SEGMENTATION
+     =========================================== -->
+<section class="slide" id="slide-20">
+    <span class="section-num">05</span>
+    <div class="slide-content">
+        <h2 class="reveal">Три рівні сегментації</h2>
+        <div class="cols">
+            <div class="info-card accent-blue reveal" style="text-align: center;">
+                <h3>Семантична</h3>
+                <p>Кожен піксель отримує <strong>клас</strong></p>
+                <!-- CSS grid visual -->
+                <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; margin-top: var(--element-gap); max-width: 120px; margin-left: auto; margin-right: auto;">
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-blue); border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-blue); border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-emerald); border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-emerald); border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-orange); border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-orange); border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-blue); border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-blue); border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-emerald); border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-emerald); border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-orange); border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: var(--accent-orange); border-radius: 2px;"></div>
+                </div>
+                <p style="font-size: var(--small-size); margin-top: 0.3em; color: var(--text-muted);">«небо», «дорога», «дерево»</p>
+            </div>
+            <div class="info-card accent-orange reveal" style="text-align: center;">
+                <h3>Інстансна</h3>
+                <p>Кожен <strong>об'єкт окремо</strong></p>
+                <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; margin-top: var(--element-gap); max-width: 120px; margin-left: auto; margin-right: auto;">
+                    <div style="height: clamp(12px, 2vw, 18px); background: #60A5FA; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #60A5FA; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #F97316; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #F97316; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #A78BFA; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #A78BFA; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #60A5FA; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #60A5FA; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #F97316; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #F97316; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #A78BFA; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #A78BFA; border-radius: 2px;"></div>
+                </div>
+                <p style="font-size: var(--small-size); margin-top: 0.3em; color: var(--text-muted);">«авто #1», «авто #2»</p>
+            </div>
+            <div class="info-card accent-emerald reveal" style="text-align: center;">
+                <h3>Паноптична</h3>
+                <p><strong>Все разом:</strong> класи + інстанси</p>
+                <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; margin-top: var(--element-gap); max-width: 120px; margin-left: auto; margin-right: auto;">
+                    <div style="height: clamp(12px, 2vw, 18px); background: #93C5FD; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #93C5FD; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #F97316; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #FB923C; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #34D399; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #6EE7B7; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #93C5FD; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #93C5FD; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #F97316; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #FB923C; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #34D399; border-radius: 2px;"></div>
+                    <div style="height: clamp(12px, 2vw, 18px); background: #6EE7B7; border-radius: 2px;"></div>
+                </div>
+                <p style="font-size: var(--small-size); margin-top: 0.3em; color: var(--text-muted);">повне розуміння сцени</p>
+            </div>
+        </div>
+
+        <div class="reveal" style="margin-top: var(--content-gap); overflow-x: auto;">
+            <table>
+                <tr>
+                    <th>Архітектура</th><th>Рік</th><th>Ключова ідея</th><th>Тип</th>
+                </tr>
+                <tr><td><strong>U-Net</strong></td><td>2015</td><td>Encoder-decoder + skip connections</td><td>Семантична</td></tr>
+                <tr><td><strong>DeepLab v3+</strong></td><td>2018</td><td>Atrous convolutions + ASPP</td><td>Семантична</td></tr>
+                <tr><td><strong>Mask R-CNN</strong></td><td>2017</td><td>Faster R-CNN + маска для кожної рамки</td><td>Інстансна</td></tr>
+                <tr><td><strong>SAM</strong></td><td>2023</td><td>Foundation model, 1.1B масок, zero-shot</td><td>Будь-яка</td></tr>
+            </table>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 21: SEGMENTATION IN GAMES
+     =========================================== -->
+<section class="slide" id="slide-21">
+    <div class="slide-content">
+        <h2 class="reveal">Сегментація в іграх</h2>
+        <div class="cols" style="flex-wrap: wrap;">
+            <div class="info-card accent-emerald reveal" style="min-width: min(100%, 250px);">
+                <h3>Процедурна генерація</h3>
+                <p>Супутникове фото &rarr; сегментація &rarr; біоми / тайли для ігрової карти</p>
+            </div>
+            <div class="info-card accent-blue reveal" style="min-width: min(100%, 250px);">
+                <h3>Навігація RL-агентів</h3>
+                <p>Кадр &rarr; маски «підлога», «стіна», «двері» &rarr; навігаційні рішення. <em>ViZDoom</em></p>
+            </div>
+            <div class="info-card accent-orange reveal" style="min-width: min(100%, 250px);">
+                <h3>AR та маттінг</h3>
+                <p>Відділення гравця від фону в реальному часі. <em>MediaPipe, 30+ FPS</em></p>
+            </div>
+            <div class="info-card accent-violet reveal" style="min-width: min(100%, 250px);">
+                <h3>SAM &mdash; Segment Anything</h3>
+                <p>Foundation model (Meta, 2023). 11M зображень, zero-shot. SAM 2 (2024): відео-трекінг.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 22: VISION TRANSFORMERS
+     =========================================== -->
+<section class="slide" id="slide-22">
+    <span class="section-num">06</span>
+    <div class="slide-content">
+        <h2 class="reveal">Vision Transformer (ViT) та CLIP</h2>
+        <div class="cols">
+            <div class="info-card accent-violet reveal">
+                <h3>ViT / Swin / DETR</h3>
+                <p>Зображення &rarr; патчі 16&times;16 &rarr; embedding &rarr; Transformer encoder</p>
+                <ul style="margin-top: var(--element-gap);">
+                    <li><strong>Swin</strong> (2021): локальні вікна, лінійна складність</li>
+                    <li><strong>DETR</strong> (2020): end-to-end детекція без NMS</li>
+                </ul>
+                <p style="margin-top: var(--element-gap);"><span class="tag violet">Глобальний контекст замість локальних згорток</span></p>
+            </div>
+            <div class="info-card accent-orange reveal">
+                <h3>CLIP: зір + мова</h3>
+                <p>400M пар «зображення + текст» &rarr; спільний embedding-простір &rarr; zero-shot класифікація</p>
+                <ul style="margin-top: var(--element-gap);">
+                    <li><strong>Пошук ассетів:</strong> «mossy stone wall» &rarr; знайде текстуру</li>
+                    <li><strong>Автокласифікація:</strong> жанр, настрій без тренування</li>
+                    <li><strong>Стилістика:</strong> перевірка відповідності арт-стилю</li>
+                </ul>
+            </div>
+        </div>
+        <div class="highlight-box reveal" style="margin-top: var(--content-gap); text-align: center;">
+            <p><strong>Для ігор:</strong> глобальний контекст, гнучкість роздільності, природне поєднання з мовними моделями</p>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 23: DEPTH ESTIMATION
+     =========================================== -->
+<section class="slide" id="slide-23">
+    <div class="slide-content">
+        <h2 class="reveal">Оцінка глибини з одного фото</h2>
+        <div class="info-card accent-blue reveal" style="text-align: center; margin-bottom: var(--content-gap);">
+            <p><strong>Depth Anything v2</strong> (ByteDance, 2024) &mdash; 62M зображень, метрична глибина, реалтайм</p>
+        </div>
+        <div class="cols">
+            <div class="info-card accent-orange reveal" style="text-align: center;">
+                <h3>Normal maps</h3>
+                <p>2D текстура &rarr; карта глибини &rarr; автоматичний normal map для PBR</p>
+            </div>
+            <div class="info-card accent-emerald reveal" style="text-align: center;">
+                <h3>2.5D ефекти</h3>
+                <p>Фото &rarr; глибина &rarr; паралакс для «живих» фонів у грі</p>
+            </div>
+            <div class="info-card accent-violet reveal" style="text-align: center;">
+                <h3>AR окклюзія</h3>
+                <p>Pokemon ховається за деревами завдяки depth map з камери</p>
+            </div>
+        </div>
+        <p class="reveal" style="text-align: center; margin-top: var(--content-gap);">Моноколярна оцінка &mdash; дешевша альтернатива SfM для отримання <strong>приблизної</strong> 3D-інформації в реальному часі</p>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 24: RL ENVIRONMENTS
+     =========================================== -->
+<section class="slide" id="slide-24">
+    <span class="section-num">07</span>
+    <div class="slide-content">
+        <h2 class="reveal">Реконструйовані середовища для RL</h2>
+
+        <div class="cols reveal" style="margin-bottom: var(--content-gap);">
+            <div class="info-card accent-rose">
+                <h3>Проблема</h3>
+                <p>Тренування RL-агента потребує <strong>тисяч годин</strong> у 3D-середовищі. Моделювати вручну &mdash; дорого.</p>
+            </div>
+            <div class="info-card accent-emerald">
+                <h3>Рішення</h3>
+                <p>Відсканувати реальну будівлю &rarr; отримати <strong>готове тренувальне середовище</strong> за годину.</p>
+            </div>
+        </div>
+
+        <div class="reveal" style="overflow-x: auto;">
+            <table>
+                <tr><th>Платформа</th><th>Опис</th><th>Дані</th></tr>
+                <tr><td><strong>Meta Habitat</strong></td><td>Швидкий 3D-симулятор для навігації</td><td>HM3D: 1000 сканів будівель</td></tr>
+                <tr><td><strong>Replica</strong> (Meta)</td><td>Високоякісні скани з семантикою</td><td>18 приміщень, HDR</td></tr>
+                <tr><td><strong>iGibson</strong> (Stanford)</td><td>Інтерактивні сцени з фізикою</td><td>Готовий RL-код (SAC)</td></tr>
+                <tr><td><strong>AirSim / UnrealCV</strong></td><td>UE5 як бекенд для RL</td><td>Будь-який UE5-рівень</td></tr>
+            </table>
+        </div>
+
+        <div class="info-card accent-orange reveal" style="margin-top: var(--element-gap);">
+            <p><strong>Для геймдеву:</strong> скан будівлі &rarr; прототип рівня &rarr; бот тренується <em>до</em> художнього polish. Оцінка складності: RL-агент проходить рівень 1000 разів &rarr; метрики для левел-дизайнерів.</p>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 25: FULL PIPELINE
+     =========================================== -->
+<section class="slide" id="slide-25">
+    <div class="slide-content">
+        <h2 class="reveal">Повний пайплайн розуміння сцени</h2>
+
+        <!-- CSS diagram: complete pipeline -->
+        <div class="reveal" style="margin: var(--content-gap) 0;">
+            <div class="diagram-flow" style="flex-wrap: wrap; gap: clamp(0.3rem, 0.8vw, 0.6rem);">
+                <div class="diagram-box blue">Кадр з камери</div>
+                <span class="diagram-arrow">&rarr;</span>
+                <div style="display: flex; flex-direction: column; gap: clamp(0.15rem, 0.3vw, 0.3rem);">
+                    <div class="diagram-box orange" style="font-size: clamp(0.5rem, 0.8vw, 0.7rem);">YOLO &rarr; детекція об'єктів</div>
+                    <div class="diagram-box emerald" style="font-size: clamp(0.5rem, 0.8vw, 0.7rem);">DeepLab &rarr; сегментація</div>
+                    <div class="diagram-box violet" style="font-size: clamp(0.5rem, 0.8vw, 0.7rem);">Depth Anything &rarr; глибина</div>
+                </div>
+                <span class="diagram-arrow">&rarr;</span>
+                <div class="diagram-box rose">Fusion</div>
+                <span class="diagram-arrow">&rarr;</span>
+                <div style="display: flex; flex-direction: column; gap: clamp(0.15rem, 0.3vw, 0.3rem);">
+                    <div class="diagram-box" style="font-size: clamp(0.5rem, 0.8vw, 0.7rem);">3D-позиції об'єктів</div>
+                    <div class="diagram-box" style="font-size: clamp(0.5rem, 0.8vw, 0.7rem);">Прохідні зони</div>
+                    <div class="diagram-box" style="font-size: clamp(0.5rem, 0.8vw, 0.7rem);">Семантичний контекст</div>
+                </div>
+                <span class="diagram-arrow">&rarr;</span>
+                <div class="diagram-box blue">Ігрова логіка</div>
+            </div>
+        </div>
+
+        <div class="cols reveal">
+            <div class="info-card accent-blue">
+                <h3>Оптимізація для рушіїв</h3>
+                <p><code>PyTorch &rarr; torch.export &rarr; ONNX &rarr; TensorRT &rarr; C++ &rarr; GPU (&lt; 5 мс)</code></p>
+                <p style="margin-top: 0.3em;"><strong>Unity:</strong> Barracuda &bull; <strong>UE5:</strong> NNE</p>
+            </div>
+            <div class="info-card accent-emerald">
+                <h3>Що працює в реальному часі</h3>
+                <p><strong>Так:</strong> YOLO-nano, Depth Anything-S, MediaPipe</p>
+                <p><strong>Ні (інструменти):</strong> SAM, Swin-L, Mask R-CNN</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 26: CASE STUDIES
+     =========================================== -->
+<section class="slide" id="slide-26">
+    <div class="slide-content">
+        <h2 class="reveal">Кейси: CV у реальних іграх</h2>
+        <div class="reveal" style="overflow-x: auto;">
+            <table>
+                <tr><th>Проєкт</th><th>Технологія</th><th>Результат</th></tr>
+                <tr><td><strong>MineDojo</strong> (NVIDIA)</td><td>MineCLIP (CLIP + відео)</td><td>Агент виконує текстові інструкції в Minecraft</td></tr>
+                <tr><td><strong>Ubisoft La Forge</strong></td><td>Детекція + сегментація</td><td>Автоматичне QA для Assassin's Creed</td></tr>
+                <tr><td><strong>MediaPipe</strong> (Google)</td><td>Pose + Hand tracking</td><td>Just Dance, Beat Saber, Vision Pro</td></tr>
+                <tr><td><strong>GRID Esports</strong></td><td>YOLO на мінімапі</td><td>Автоматична аналітика CS/Dota 2</td></tr>
+                <tr><td><strong>EA DICE</strong></td><td>Фотограмметрія + SfM</td><td>Реальні локації &rarr; ігрові карти Battlefield</td></tr>
+                <tr><td><strong>Quixel Megascans</strong></td><td>SfM + MVS</td><td>18 000+ фотореалістичних ассетів для UE5</td></tr>
+            </table>
+        </div>
+        <div class="highlight-box reveal" style="margin-top: var(--content-gap); text-align: center;">
+            <p><strong>SLAM3R</strong> (CVPR 2025 Highlight): реконструкція 3D з відео через feed-forward нейромережу &mdash; без SfM чи bundle adjustment. Потенціал: генерація середовищ «на льоту» під час гри.</p>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 27: KEY TAKEAWAYS
+     =========================================== -->
+<section class="slide" id="slide-27">
+    <div class="slide-content">
+        <h2 class="reveal">Ключові висновки</h2>
+        <div class="rows" style="gap: var(--element-gap); max-width: min(90%, 800px); margin: 0 auto;">
+            <div class="info-card accent-blue reveal" style="display: flex; align-items: center; gap: var(--element-gap);">
+                <span class="tag blue" style="font-size: var(--h3-size); flex-shrink: 0;">1</span>
+                <p><strong>SfM &mdash; фундамент</strong> усієї 3D-реконструкції: геометрія та пози камер з набору фотографій.</p>
+            </div>
+            <div class="info-card accent-orange reveal" style="display: flex; align-items: center; gap: var(--element-gap);">
+                <span class="tag orange" style="font-size: var(--h3-size); flex-shrink: 0;">2</span>
+                <p><strong>Повний пайплайн:</strong> SfM &rarr; MVS &rarr; меш &rarr; рушій. NeRF і 3DGS дають фотореалістичний вигляд.</p>
+            </div>
+            <div class="info-card accent-emerald reveal" style="display: flex; align-items: center; gap: var(--element-gap);">
+                <span class="tag emerald" style="font-size: var(--h3-size); flex-shrink: 0;">3</span>
+                <p><strong>YOLO + сегментація</strong> &mdash; попіксельне розуміння для NPC-зору, QA, AR та процедурної генерації.</p>
+            </div>
+            <div class="info-card accent-violet reveal" style="display: flex; align-items: center; gap: var(--element-gap);">
+                <span class="tag violet" style="font-size: var(--h3-size); flex-shrink: 0;">4</span>
+                <p><strong>Vision Transformers + CLIP</strong> &mdash; глобальний контекст та зв'язок зору з мовою.</p>
+            </div>
+            <div class="info-card accent-rose reveal" style="display: flex; align-items: center; gap: var(--element-gap);">
+                <span class="tag rose" style="font-size: var(--h3-size); flex-shrink: 0;">5</span>
+                <p><strong>Реальні скани &rarr; ігрові рівні:</strong> економить місяці моделювання та дає середовища для RL-тренування.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+     SLIDE 28: WHAT'S NEXT
+     =========================================== -->
+<section class="slide title-slide" id="slide-28">
+    <div class="title-geo title-geo-1"></div>
+    <div class="title-geo title-geo-2"></div>
+    <div class="title-geo title-geo-3"></div>
+    <div class="slide-content" style="z-index: 1; align-items: center; text-align: center;">
+        <p class="reveal meta">Наступна лекція</p>
+        <h1 class="reveal" style="margin-top: var(--element-gap);">Обробка послідовностей</h1>
+        <p class="reveal subtitle" style="margin-top: var(--element-gap);">RNN, LSTM, механізм уваги &mdash; від CV до NLP і назад</p>
+        <div class="reveal" style="margin-top: var(--content-gap); display: flex; gap: var(--element-gap); flex-wrap: wrap; justify-content: center;">
+            <span class="tag" style="background: rgba(255,255,255,0.15); color: white;">Часові ряди</span>
+            <span class="tag" style="background: rgba(255,255,255,0.15); color: white;">Діалогові системи</span>
+            <span class="tag" style="background: rgba(255,255,255,0.15); color: white;">Transformer</span>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===========================================
+   JAVASCRIPT: SLIDE PRESENTATION CONTROLLER
+   =========================================== -->
+<script>
+    class SlidePresentation {
+        constructor() {
+            this.slides = document.querySelectorAll('.slide');
+            this.currentSlide = 0;
+            this.isScrolling = false;
+
+            this.setupIntersectionObserver();
+            this.setupKeyboardNav();
+            this.setupTouchNav();
+            this.setupWheelNav();
+            this.setupProgressBar();
+            this.setupNavDots();
+            this.updateSlideCounter();
+        }
+
+        /* Intersection Observer: add .visible class for CSS animations */
+        setupIntersectionObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        const idx = Array.from(this.slides).indexOf(entry.target);
+                        if (idx !== -1) {
+                            this.currentSlide = idx;
+                            this.updateNavDots();
+                            this.updateProgressBar();
+                            this.updateSlideCounter();
+                        }
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            this.slides.forEach(slide => observer.observe(slide));
+        }
+
+        /* Keyboard navigation */
+        setupKeyboardNav() {
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case 'ArrowDown':
+                    case 'ArrowRight':
+                    case ' ':
+                    case 'PageDown':
+                        e.preventDefault();
+                        this.goToSlide(this.currentSlide + 1);
+                        break;
+                    case 'ArrowUp':
+                    case 'ArrowLeft':
+                    case 'PageUp':
+                        e.preventDefault();
+                        this.goToSlide(this.currentSlide - 1);
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        this.goToSlide(0);
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        this.goToSlide(this.slides.length - 1);
+                        break;
+                }
+            });
+        }
+
+        /* Touch/swipe support */
+        setupTouchNav() {
+            let startY = 0;
+            let startX = 0;
+            document.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                startX = e.touches[0].clientX;
+            }, { passive: true });
+
+            document.addEventListener('touchend', (e) => {
+                const deltaY = startY - e.changedTouches[0].clientY;
+                const deltaX = startX - e.changedTouches[0].clientX;
+                if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+                    if (deltaY > 0) this.goToSlide(this.currentSlide + 1);
+                    else this.goToSlide(this.currentSlide - 1);
+                }
+            }, { passive: true });
+        }
+
+        /* Mouse wheel navigation with debounce */
+        setupWheelNav() {
+            let lastWheel = 0;
+            document.addEventListener('wheel', (e) => {
+                const now = Date.now();
+                if (now - lastWheel < 800) return;
+                lastWheel = now;
+                if (e.deltaY > 0) this.goToSlide(this.currentSlide + 1);
+                else if (e.deltaY < 0) this.goToSlide(this.currentSlide - 1);
+            }, { passive: true });
+        }
+
+        /* Navigate to a specific slide */
+        goToSlide(index) {
+            if (index < 0 || index >= this.slides.length) return;
+            this.currentSlide = index;
+            this.slides[index].scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* Progress bar */
+        setupProgressBar() {
+            this.progressBar = document.getElementById('progressBar');
+            this.updateProgressBar();
+        }
+
+        updateProgressBar() {
+            if (!this.progressBar) return;
+            const progress = ((this.currentSlide + 1) / this.slides.length) * 100;
+            this.progressBar.style.width = progress + '%';
+        }
+
+        /* Navigation dots */
+        setupNavDots() {
+            const container = document.getElementById('navDots');
+            if (!container) return;
+            this.slides.forEach((_, i) => {
+                const dot = document.createElement('button');
+                dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+                dot.setAttribute('aria-label', `Slide ${i + 1}`);
+                dot.addEventListener('click', () => this.goToSlide(i));
+                container.appendChild(dot);
+            });
+            this.dots = container.querySelectorAll('.nav-dot');
+        }
+
+        updateNavDots() {
+            if (!this.dots) return;
+            this.dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === this.currentSlide);
+            });
+        }
+
+        /* Slide counter */
+        updateSlideCounter() {
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${this.currentSlide + 1} / ${this.slides.length}`;
+            }
+        }
+    }
+
+    /* Initialize when DOM is ready */
+    document.addEventListener('DOMContentLoaded', () => {
+        new SlidePresentation();
+    });
+</script>
+
+</body>
+</html>

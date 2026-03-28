@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Лекція 8: 3D-реконструкція сцен — Structure from Motion</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/theme/moon.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/plugin/highlight/monokai.css">
+  <style>
+    :root {
+      --accent: #3498db;
+      --accent2: #2ecc71;
+      --warn: #e74c3c;
+      --gold: #f39c12;
+      --purple: #9b59b6;
+    }
+    .reveal { font-size: 26px; }
+    .reveal h1 { font-size: 1.9em; color: #ecf0f1; }
+    .reveal h2 { font-size: 1.35em; color: #85c1e9; }
+    .reveal h3 { font-size: 1.1em; color: #aed6f1; }
+    .reveal p  { line-height: 1.5; }
+    .reveal ul { line-height: 1.7; }
+    .reveal section img { max-height: 66vh; margin: 0 auto; display: block; border: none; box-shadow: none; }
+    .reveal pre { width: 100%; font-size: 0.72em; }
+    .reveal code { background: #1a1a2e; }
+
+    .cols   { display: flex; gap: 2em; align-items: flex-start; }
+    .cols > * { flex: 1; }
+    .box {
+      background: rgba(52, 152, 219, 0.15);
+      border-left: 4px solid var(--accent);
+      padding: 0.5em 1em;
+      margin: 0.5em 0;
+      border-radius: 4px;
+    }
+    .box.green  { background: rgba(46,204,113,0.12); border-color: var(--accent2); }
+    .box.red    { background: rgba(231, 76, 60, 0.12); border-color: var(--warn); }
+    .box.gold   { background: rgba(243,156,18,0.12); border-color: var(--gold); }
+    .box.purple { background: rgba(155,89,182,0.12); border-color: var(--purple); }
+    .tag {
+      display: inline-block;
+      padding: 0.15em 0.6em;
+      border-radius: 20px;
+      font-size: 0.75em;
+      font-weight: bold;
+      vertical-align: middle;
+    }
+    .tag.blue  { background: var(--accent); color: white; }
+    .tag.green { background: var(--accent2); color: #111; }
+    .tag.purple { background: var(--purple); color: white; }
+    .footer    { font-size: 0.55em; color: #7f8c8d; margin-top: 1em; }
+    table th   { background: rgba(52,152,219,0.3); }
+    table td, table th { border: 1px solid #4a6fa5; padding: 0.4em 0.7em; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ═══════════════════════ SLIDE 1: TITLE ═══════════════════════ -->
+<section>
+  <h1>3D-реконструкція сцен</h1>
+  <h2 style="color:#85c1e9; margin-top:0.2em;">Structure from Motion та застосування в іграх</h2>
+  <br>
+  <p>Штучний інтелект в ігрових застосунках</p>
+  <p style="margin-top:1em;">Національний університет «Львівська Політехніка»</p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 2: FROM 2D TO 3D ═══════════════════════ -->
+<section>
+  <h2>Від 2D до 3D: навіщо?</h2>
+  <p>CNN розуміють зображення — але ігри та роботи живуть у <strong>3D-просторі</strong></p>
+  <br>
+  <div class="cols">
+    <div class="fragment box">
+      <h3>Датчики глибини</h3>
+      <p>LiDAR, стерео, ToF</p>
+      <p style="font-size:0.8em;">Точно, але <em>дорого</em></p>
+    </div>
+    <div class="fragment box gold">
+      <h3>Моноколярна оцінка</h3>
+      <p>Нейромережа за 1 фото</p>
+      <p style="font-size:0.8em;">Швидко, але <em>неточно</em></p>
+    </div>
+    <div class="fragment box green">
+      <h3>SfM</h3>
+      <p>Геометрія з набору фото</p>
+      <p style="font-size:0.8em;">Достатньо <em>смартфона</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 3: PARALLAX INTUITION ═══════════════════════ -->
+<section>
+  <h2>Паралакс: як ми бачимо глибину</h2>
+  <img src="img/01_parallax.png" alt="Parallax intuition">
+  <p class="fragment box" style="margin-top:0.5em;">
+    Два погляди на одну точку → <strong>тріангуляція</strong> → 3D-координати
+  </p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 4: SFM DEFINITION ═══════════════════════ -->
+<section>
+  <h2>Structure from Motion — що це?</h2>
+  <div class="box gold" style="font-size:1.1em; margin:0.8em 0;">
+    Одночасне відновлення <strong>структури сцени</strong> (3D-координати точок)<br>
+    та <strong>руху камери</strong> (положення + орієнтація)<br>
+    з набору <em>неструктурованих фотографій</em>
+  </div>
+  <br>
+  <div class="fragment">
+    <p><strong>Вхід:</strong> набір звичайних фото (будь-який порядок)</p>
+    <p><strong>Вихід:</strong> розріджена хмара 3D-точок + калібровані пози камер</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 5: SFM PIPELINE ═══════════════════════ -->
+<section>
+  <h2>Інкрементальний SfM: 7 кроків</h2>
+  <img src="img/02_sfm_pipeline.png" alt="SfM pipeline">
+</section>
+
+<!-- ═══════════════════════ SLIDE 6: STEPS 1-3 ═══════════════════════ -->
+<section>
+  <h2>Кроки 1–3: від пікселів до геометрії</h2>
+  <div class="cols">
+    <div>
+      <div class="fragment box">
+        <strong>1. Виділення ознак</strong><br>
+        SIFT / SuperPoint знаходять точки, інваріантні до масштабу, повороту, освітлення.<br>
+        Кожна точка → числовий <em>дескриптор</em>
+      </div>
+      <div class="fragment box">
+        <strong>2. Зіставлення</strong><br>
+        Порівняння дескрипторів між парами фото.<br>
+        Результат: пари відповідних точок (matches)
+      </div>
+    </div>
+    <div>
+      <div class="fragment box gold">
+        <strong>3. Геометрична верифікація</strong><br>
+        RANSAC оцінює <strong>фундаментальну матрицю</strong> —<br>
+        геометричне відношення між двома видами.<br>
+        Помилкові пари (outliers) відкидаються
+      </div>
+      <br>
+      <p class="fragment" style="font-size:0.85em;">
+        Результат: очищений <strong>граф сцени</strong> —<br>
+        які зображення пов'язані геометрично
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 7: STEPS 4-6 ═══════════════════════ -->
+<section>
+  <h2>Кроки 4–6: нарощування моделі</h2>
+  <div class="box" style="margin:0.6em 0;">
+    <strong>4. Ініціалізація:</strong> обрати пару фото з великою базою →
+    тріангулювати початкові 3D-точки
+  </div>
+  <div class="fragment box green" style="margin:0.6em 0;">
+    <strong>5. Реєстрація нових камер:</strong> для кожного нового фото знайти відповідності
+    з уже відомими 3D-точками → розв'язати задачу <strong>PnP</strong> (Perspective-n-Point) → отримати позу камери
+  </div>
+  <div class="fragment box" style="margin:0.6em 0;">
+    <strong>6. Тріангуляція:</strong> нова камера створює нові пари точок →
+    обчислити нові 3D-координати → хмара зростає
+  </div>
+  <p class="fragment" style="margin-top:0.8em; text-align:center;">
+    Кроки 5–7 <strong>повторюються</strong> для кожного нового зображення
+  </p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 8: BUNDLE ADJUSTMENT ═══════════════════════ -->
+<section>
+  <h2>Крок 7: Bundle Adjustment</h2>
+  <p>Нелінійна оптимізація, що уточнює <strong>все одразу</strong> —<br>
+  всі пози камер і всі 3D-точки:</p>
+  <br>
+  <p style="font-size:1.3em; text-align:center;">
+    $$\min_{\mathbf{X}, \mathbf{P}} \sum_{i} \sum_{j} \| \mathbf{x}_{ij} - \pi(\mathbf{P}_j, \mathbf{X}_i) \|^2$$
+  </p>
+  <br>
+  <div class="fragment cols">
+    <div class="box">
+      <strong>$\mathbf{X}_i$</strong> — 3D-координати $i$-тої точки<br>
+      <strong>$\mathbf{P}_j$</strong> — параметри $j$-тої камери
+    </div>
+    <div class="box gold">
+      <strong>$\pi$</strong> — функція проекції 3D → 2D<br>
+      <strong>$\mathbf{x}_{ij}$</strong> — спостережувані 2D-координати
+    </div>
+  </div>
+  <div class="fragment box red" style="margin-top:0.8em;">
+    Мінімізуємо <strong>помилку репроекції</strong> — різницю між тим, де точка є на фото,
+    і де б вона <em>мала бути</em> за нашою 3D-моделлю
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 9: COMPARISON ═══════════════════════ -->
+<section>
+  <h2>SfM у контексті: споріднені методи</h2>
+  <img src="img/03_comparison.png" alt="Comparison">
+  <p class="fragment box" style="margin-top:0.3em;">
+    <strong>SfM — фундамент.</strong> NeRF і 3DGS використовують пози камер від COLMAP як вхід
+  </p>
+</section>
+
+<!-- ═══════════════════════ SLIDE 10: COMPARISON TABLE ═══════════════════════ -->
+<section>
+  <h2>Порівняння: SfM, MVS, SLAM, NeRF, 3DGS</h2>
+  <table style="width:100%; font-size:0.75em;">
+    <thead>
+      <tr>
+        <th></th>
+        <th>SfM</th>
+        <th>MVS</th>
+        <th>SLAM</th>
+        <th>NeRF</th>
+        <th>3DGS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="fragment">
+        <td><strong>Вхід</strong></td>
+        <td>Фото</td>
+        <td>SfM-результат</td>
+        <td>Відео (live)</td>
+        <td>Фото + SfM-пози</td>
+        <td>Фото + SfM-пози</td>
+      </tr>
+      <tr class="fragment">
+        <td><strong>Вихід</strong></td>
+        <td>Хмара + пози</td>
+        <td>Щільний меш</td>
+        <td>Поза + карта</td>
+        <td>Нові ракурси</td>
+        <td>Нові ракурси</td>
+      </tr>
+      <tr class="fragment">
+        <td><strong>Швидкість</strong></td>
+        <td>Офлайн</td>
+        <td>Офлайн</td>
+        <td>30+ Hz</td>
+        <td>Години</td>
+        <td>30–60 хв</td>
+      </tr>
+      <tr class="fragment">
+        <td><strong>Рендер</strong></td>
+        <td>—</td>
+        <td>Низька якість</td>
+        <td>—</td>
+        <td>Фотореалістичний</td>
+        <td>90+ FPS</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════ SLIDE 11: TOOLS ═══════════════════════ -->
+<section>
+  <h2>Інструменти SfM</h2>
+  <div class="cols">
+    <div>
+      <div class="box" style="margin:0.5em 0;">
+        <strong>COLMAP</strong><br>
+        Open source, C++<br>
+        Золотий стандарт точності<br>
+        CLI + GUI
+      </div>
+      <div class="fragment box green" style="margin:0.5em 0;">
+        <strong>RealityCapture</strong> (Epic Games)<br>
+        Найшвидший на ринку<br>
+        Безкоштовний < $1M доходу<br>
+        Інтеграція з UE5
+      </div>
+    </div>
+    <div>
+      <div class="fragment box gold" style="margin:0.5em 0;">
+        <strong>Meshroom / AliceVision</strong><br>
+        Open source, GUI на нодах<br>
+        Зручний для навчання
+      </div>
+      <br>
+      <p class="fragment" style="font-size:0.9em;">
+        Більшість робіт з NeRF і 3DGS<br>
+        використовують <strong>COLMAP</strong><br>
+        для обчислення позицій камер
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 12: DRONES ═══════════════════════ -->
+<section>
+  <h2>SfM у навігації дронів</h2>
+  <img src="img/07_drone_workflow.png" alt="Drone workflow">
+</section>
+
+<!-- ═══════════════════════ SLIDE 13: DRONES DETAIL ═══════════════════════ -->
+<section>
+  <h2>Дрони: офлайн vs реальний час</h2>
+  <div class="cols">
+    <div>
+      <div class="box">
+        <strong>До польоту (SfM)</strong>
+        <ul style="font-size:0.85em;">
+          <li>Зйомка з перекриттям</li>
+          <li>SfM+MVS на сервері</li>
+          <li>Ортофотоплан + DSM</li>
+          <li>Pix4D, OpenDroneMap</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="fragment box green">
+        <strong>Під час польоту (SLAM)</strong>
+        <ul style="font-size:0.85em;">
+          <li>VIO: камера + IMU, 30+ Hz</li>
+          <li>ORB-SLAM3, VINS-Mono</li>
+          <li>SfM-карта як <em>апріорна</em> інформація</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="fragment box red" style="margin-top:0.8em;">
+    <strong>Проблема масштабу:</strong> монокулярний SfM не знає реальних розмірів.
+    1 м чи 10 м? Для дрона це критично.<br>
+    Розв'язання: GPS-мітки, IMU, відомі об'єкти
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 14: PHOTOGRAMMETRY PIPELINE ═══════════════════════ -->
+<section>
+  <h2>Від реального світу до ігрового рівня</h2>
+  <img src="img/04_photogrammetry_pipeline.png" alt="Photogrammetry pipeline">
+</section>
+
+<!-- ═══════════════════════ SLIDE 15: WHO USES IT ═══════════════════════ -->
+<section>
+  <h2>Фотограмметрія в індустрії</h2>
+  <table style="width:100%; margin-top:0.5em;">
+    <thead><tr><th>Студія / продукт</th><th>Як використовують</th></tr></thead>
+    <tbody>
+      <tr class="fragment"><td><strong>EA DICE</strong> (Battlefield)</td><td>Фотографування реальних локацій для ігрових карт</td></tr>
+      <tr class="fragment"><td><strong>Infinity Ward</strong> (CoD: MW)</td><td>Сканування середовищ для фотореалістичних рівнів</td></tr>
+      <tr class="fragment"><td><strong>DICE</strong> (Star Wars Battlefront)</td><td>Скани реальних декорацій фільму для ігрових сцен</td></tr>
+      <tr class="fragment"><td><strong>Quixel Megascans</strong> (Epic)</td><td>18 000+ сканованих ассетів, безкоштовно для UE5</td></tr>
+    </tbody>
+  </table>
+  <div class="fragment box green" style="margin-top:0.8em;">
+    Фотограмметрія економить <strong>місяці</strong> ручного 3D-моделювання
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 16: NERF AND 3DGS ═══════════════════════ -->
+<section>
+  <h2>Нейронні методи: NeRF та 3D Gaussian Splatting</h2>
+  <div class="cols">
+    <div>
+      <div class="box purple">
+        <strong>NeRF</strong><br>
+        Нейромережа вивчає функцію:<br>
+        $f(\mathbf{x}, \mathbf{d}) \to (c, \sigma)$<br>
+        <span style="font-size:0.8em;">координата + напрямок → колір + щільність</span><br>
+        <br>
+        <span style="font-size:0.85em;">Тренування: години<br>Рендер: секунди/кадр</span>
+      </div>
+    </div>
+    <div>
+      <div class="fragment box red">
+        <strong>3D Gaussian Splatting</strong><br>
+        Набір 3D-еліпсоїдів з кольором<br>
+        Диференційована растеризація<br>
+        <br>
+        <span style="font-size:0.85em;">Тренування: 30–60 хв<br>
+        <strong>Рендер: 90+ FPS</strong></span>
+      </div>
+    </div>
+  </div>
+  <div class="fragment box gold" style="margin-top:0.8em;">
+    Обидва методи використовують <strong>COLMAP-пози</strong> як вхід.<br>
+    SfM дає структуру — нейронні методи дають зовнішній вигляд
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 17: 3DGS LIMITATIONS ═══════════════════════ -->
+<section>
+  <h2>3DGS для ігор: поточні обмеження</h2>
+  <div class="cols">
+    <div>
+      <div class="box red">
+        <strong>Чого немає:</strong>
+        <ul style="font-size:0.85em;">
+          <li>Полігональний меш → немає колізій</li>
+          <li>Фізика — об'єкти не взаємодіють</li>
+          <li>LOD — складно оптимізувати</li>
+          <li>Редагування обмежене</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="fragment box green">
+        <strong>Де вже працює:</strong>
+        <ul style="font-size:0.85em;">
+          <li>Кінематографічні фони</li>
+          <li>VR-середовища</li>
+          <li>Швидкий прототипінг рівнів</li>
+          <li>Превізуалізація</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="fragment box gold" style="margin-top:0.8em;">
+    <strong>glTF:</strong> розширення <code>KHR_gaussian_splatting</code> (серпень 2025)<br>
+    <strong>UE5:</strong> плагін XVERSE XScene (Apache 2.0)<br>
+    Нативна підтримка в рушіях — найближчим часом
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 18: HYBRID WORKFLOW ═══════════════════════ -->
+<section>
+  <h2>Гібридний конвеєр</h2>
+  <img src="img/06_hybrid_workflow.png" alt="Hybrid workflow">
+</section>
+
+<!-- ═══════════════════════ SLIDE 19: RL PROBLEM ═══════════════════════ -->
+<section>
+  <h2>Реконструйовані середовища для RL</h2>
+  <p>Тренування RL-агента (наприклад, FPS-бота) потребує <strong>тисяч годин</strong> взаємодії з 3D-середовищем</p>
+  <br>
+  <div class="cols">
+    <div class="fragment box red">
+      <strong>Проблема:</strong><br>
+      Вручну моделювати тренувальні рівні — дорого та повільно
+    </div>
+    <div class="fragment box green">
+      <strong>Рішення:</strong><br>
+      Відсканувати реальну будівлю → отримати готове середовище за годину
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 20: RL PIPELINE ═══════════════════════ -->
+<section>
+  <h2>Від скану до тренованого агента</h2>
+  <img src="img/05_rl_pipeline.png" alt="RL pipeline">
+</section>
+
+<!-- ═══════════════════════ SLIDE 21: RL PLATFORMS ═══════════════════════ -->
+<section>
+  <h2>Платформи для embodied AI</h2>
+  <table style="width:100%; margin-top:0.5em;">
+    <thead><tr><th>Платформа</th><th>Що це</th><th>Датасет</th></tr></thead>
+    <tbody>
+      <tr class="fragment">
+        <td><strong>Meta Habitat</strong></td>
+        <td>Швидкий 3D-симулятор для навігації</td>
+        <td>HM3D: 1000 сканів будівель</td>
+      </tr>
+      <tr class="fragment">
+        <td><strong>Replica</strong> (Meta)</td>
+        <td>Високоякісні скани з семантикою</td>
+        <td>18 приміщень, HDR + розмітка</td>
+      </tr>
+      <tr class="fragment">
+        <td><strong>iGibson</strong> (Stanford)</td>
+        <td>Інтерактивні сцени з фізикою</td>
+        <td>Готовий RL-код (SAC)</td>
+      </tr>
+      <tr class="fragment">
+        <td><strong>AirSim / UnrealCV</strong></td>
+        <td>UE5 як бекенд для RL</td>
+        <td>Будь-який UE5-рівень</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════ SLIDE 22: RL GAME APPLICATIONS ═══════════════════════ -->
+<section>
+  <h2>Чому це важливо для геймдеву</h2>
+  <div class="box green" style="margin:0.6em 0;">
+    <strong>Тренування ботів на реальній геометрії</strong><br>
+    Скан будівлі → прототип рівня → бот тренується <em>до</em> художнього polish
+  </div>
+  <div class="fragment box" style="margin:0.6em 0;">
+    <strong>Оцінка складності рівнів</strong><br>
+    RL-агент проходить рівень 1000 разів → метрики для левел-дизайнерів:<br>
+    час проходження, «мертві зони», вибрані шляхи
+  </div>
+  <div class="fragment box gold" style="margin:0.6em 0;">
+    <strong>SLAM3R</strong> (CVPR 2025 Highlight)<br>
+    Реконструкція 3D з відео через feed-forward нейромережу —<br>
+    без SfM чи bundle adjustment. Потенціал: генерація середовищ «на льоту»
+  </div>
+</section>
+
+<!-- ═══════════════════════ SLIDE 23: SUMMARY ═══════════════════════ -->
+<section>
+  <h2>Підсумок</h2>
+  <table style="width:100%;">
+    <thead><tr><th>Концепція</th><th>Ключова ідея</th></tr></thead>
+    <tbody>
+      <tr class="fragment"><td>SfM</td><td>Фотографії → 3D-хмара + пози камер (7-крокова оптимізація)</td></tr>
+      <tr class="fragment"><td>SfM = фундамент</td><td>MVS, NeRF, 3DGS — усі потребують SfM-позицій як входу</td></tr>
+      <tr class="fragment"><td>Фотограмметрія</td><td>Індустріальний стандарт: реальний світ → ігровий рівень</td></tr>
+      <tr class="fragment"><td>Дрони</td><td>Офлайн SfM (карта) + реальний час SLAM (політ)</td></tr>
+      <tr class="fragment"><td>RL середовища</td><td>Скани будівель → тренування ігрових ботів</td></tr>
+      <tr class="fragment"><td>3DGS / NeRF</td><td>Фотореалістичний вигляд, але без мешу для фізики</td></tr>
+    </tbody>
+  </table>
+  <div class="fragment box green" style="margin-top:0.8em;">
+    <strong>Наступна лекція:</strong> Обробка послідовностей — RNN, LSTM, механізм уваги
+  </div>
+</section>
+
+</div><!-- .slides -->
+</div><!-- .reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.0/plugin/math/math.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: "c/t",
+    transition: "slide",
+    transitionSpeed: "default",
+    controls: true,
+    progress: true,
+    center: true,
+    plugins: [ RevealHighlight, RevealMath.KaTeX ],
+  });
+</script>
+</body>
+</html>
