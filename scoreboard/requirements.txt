@@ -1,6 +1,7 @@
 fastapi>=0.115
 uvicorn>=0.30
 python-multipart>=0.0.9
+python-dotenv>=1.0
 resend>=2.0
 stable-baselines3>=2.3
 gymnasium[box2d]>=1.0

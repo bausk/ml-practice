@@ -178,3 +178,6 @@ media/**
 lectures-sources/lecture-07-slides/img/TransferLearningScene.mp4
 lectures-sources/lecture-07-slides/img/RC5_OR_0004_800x600_20240521-201955_800x600_20240526-235307.mp4
 *.db
+*.db-shm
+*.db-wal
+*.zip

@@ -28,7 +28,7 @@ def _evaluate_model(model_path: str, env_kwargs: dict, n_episodes: int) -> dict:
 
     model = DQN.load(model_path)
     env = gym.make("LunarLander-v3", **env_kwargs)
-    mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=n_episodes, seed=0)
+    mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=n_episodes)
     env.close()
     return {"mean_reward": float(mean_reward), "std_reward": float(std_reward)}
 
