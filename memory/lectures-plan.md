@@ -20,10 +20,10 @@ Hands-on workshop with Jupyter Notebooks. Setting up the environment, navigating
 Lecture 6 — PyTorch Introduction Workshop
 Hands-on workshop with PyTorch fundamentals. Tensors and tensor operations, autograd and automatic differentiation. Building and training a simple neural network from scratch. Working with datasets and DataLoaders. Saving and loading models. Practical exercises with game-relevant datasets.
 
-Lecture 7 — Convolutional Neural Networks and Transfer Learning
++ Lecture 7 — Convolutional Neural Networks and Transfer Learning
 CNN architecture: convolutions, pooling, feature maps. Evolution: LeNet → AlexNet → VGG → ResNet → EfficientNet. Transfer learning and fine-tuning strategies. Data augmentation techniques. Model interpretability with Grad-CAM. Game applications: asset classification, style recognition, screenshot analysis.
 
-Lecture 8 — Object Detection, Segmentation, and Scene Understanding
++ Lecture 8 — Object Detection, Segmentation, and Scene Understanding
 Object detection (YOLO, SSD, Faster R-CNN). Semantic vs instance vs panoptic segmentation (U-Net, DeepLab, Mask R-CNN). Vision Transformers (ViT, DETR, Swin). 3D vision: depth estimation, NeRF, Structure-from-Motion. Multimodal models (CLIP). Game applications: scene parsing for procedural generation, NPC vision systems, automated QA testing of game scenes.
 
 Module 3: Sequence Models and Language (Lectures 9-11)
