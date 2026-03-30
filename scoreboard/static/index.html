@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Турнірна таблиця — ЛР №3</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Турнірна таблиця — Лабораторна робота №3</h1>
+        <p class="subtitle">LunarLander DQN — Навчання з підкріпленням</p>
+
+        <!-- Upload Section -->
+        <section id="upload-section">
+            <h2>Завантажити модель</h2>
+
+            <!-- Step 1: Email -->
+            <div id="step-email">
+                <label for="email">Email (@lpnu.ua):</label>
+                <input type="email" id="email" placeholder="student@lpnu.ua">
+                <button id="btn-request-pin">Отримати PIN</button>
+                <p id="email-status" class="status"></p>
+            </div>
+
+            <!-- Step 2: Full form (hidden until PIN sent) -->
+            <div id="step-upload" class="hidden">
+                <div class="form-grid">
+                    <div>
+                        <label for="pin">PIN-код:</label>
+                        <input type="text" id="pin" maxlength="6" placeholder="123456">
+                    </div>
+                    <div>
+                        <label for="name">Ім'я:</label>
+                        <input type="text" id="name" placeholder="Олександр">
+                    </div>
+                    <div>
+                        <label for="surname">Прізвище:</label>
+                        <input type="text" id="surname" placeholder="Бауск">
+                    </div>
+                    <div>
+                        <label for="subgroup">Підгрупа:</label>
+                        <select id="subgroup"></select>
+                    </div>
+                    <div>
+                        <label for="param_a">Параметр A:</label>
+                        <input type="number" id="param_a" min="2" max="66">
+                    </div>
+                    <div class="full-width">
+                        <label for="hyperparameters">Гіперпараметри (JSON):</label>
+                        <textarea id="hyperparameters" rows="3" placeholder='{"learning_rate": 0.001, "buffer_size": 50000}'></textarea>
+                    </div>
+                    <div>
+                        <label for="model_standard">model_standard.zip:</label>
+                        <input type="file" id="model_standard" accept=".zip">
+                    </div>
+                    <div>
+                        <label for="model_individual">model_individual.zip:</label>
+                        <input type="file" id="model_individual" accept=".zip">
+                    </div>
+                </div>
+                <button id="btn-upload">Завантажити</button>
+                <p id="upload-status" class="status"></p>
+            </div>
+        </section>
+
+        <!-- Scoreboard Section -->
+        <section id="scoreboard-section">
+            <h2>Рейтинг</h2>
+            <button id="btn-refresh">Оновити</button>
+            <div id="scoreboard-tabs"></div>
+            <div id="scoreboard-content"></div>
+        </section>
+    </div>
+    <script src="/static/app.js"></script>
+</body>
+</html>
