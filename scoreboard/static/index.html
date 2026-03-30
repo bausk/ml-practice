@@ -13,7 +13,8 @@
 
         <!-- Upload Section -->
         <section id="upload-section">
-            <h2>Завантажити модель</h2>
+            <h2 class="collapsible" id="upload-toggle">Завантажити модель <span class="toggle-icon">&#9654;</span></h2>
+            <div id="upload-body" class="collapsed">
 
             <!-- Step 1: Email -->
             <div id="step-email">
@@ -32,11 +33,11 @@
                     </div>
                     <div>
                         <label for="name">Ім'я:</label>
-                        <input type="text" id="name" placeholder="Олександр">
+                        <input type="text" id="name" placeholder="Імʼя">
                     </div>
                     <div>
                         <label for="surname">Прізвище:</label>
-                        <input type="text" id="surname" placeholder="Бауск">
+                        <input type="text" id="surname" placeholder="Прізвище">
                     </div>
                     <div>
                         <label for="subgroup">Підгрупа:</label>
@@ -61,6 +62,7 @@
                 </div>
                 <button id="btn-upload">Завантажити</button>
                 <p id="upload-status" class="status"></p>
+            </div>
             </div>
         </section>
 

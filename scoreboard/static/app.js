@@ -11,6 +11,13 @@ document.addEventListener("DOMContentLoaded", () => {
     $("btn-request-pin").addEventListener("click", requestPin);
     $("btn-upload").addEventListener("click", uploadSubmission);
     $("btn-refresh").addEventListener("click", loadScoreboard);
+
+    $("upload-toggle").addEventListener("click", () => {
+        const body = $("upload-body");
+        const toggle = $("upload-toggle");
+        body.classList.toggle("collapsed");
+        toggle.classList.toggle("open");
+    });
 });
 
 async function requestPin() {

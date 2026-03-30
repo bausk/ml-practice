@@ -56,20 +56,36 @@ button:disabled { background: #94a3b8; cursor: not-allowed; }
 .form-grid .full-width { grid-column: 1 / -1; }
 
 .hidden { display: none; }
+.collapsed { display: none; }
 
 .status { margin-top: 0.5rem; font-weight: 600; }
 .status.ok { color: #16a34a; }
 .status.err { color: #dc2626; }
 
+/* Collapsible upload */
+.collapsible {
+    cursor: pointer;
+    user-select: none;
+}
+.collapsible:hover { color: #2563eb; }
+.toggle-icon {
+    font-size: 0.75rem;
+    display: inline-block;
+    transition: transform 0.2s;
+    margin-left: 0.35rem;
+}
+.collapsible.open .toggle-icon { transform: rotate(90deg); }
+
 /* Tabs */
-.tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.tabs { display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; }
 .tab {
-    padding: 0.4rem 1rem;
+    padding: 0.35rem 0.7rem;
     border: 1px solid #ccc;
     border-radius: 4px;
     cursor: pointer;
     background: #fff;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
+    white-space: nowrap;
 }
 .tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
 
