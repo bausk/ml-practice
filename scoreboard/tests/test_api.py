@@ -13,7 +13,7 @@ os.environ["RESEND_API_KEY"] = "test_key"
 
 from fastapi.testclient import TestClient
 from scoreboard import db
-from scoreboard.main import app
+from main import app
 
 client = TestClient(app)
 

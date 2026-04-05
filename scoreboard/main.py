@@ -4,14 +4,16 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from scoreboard import email_service, evaluator
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from scoreboard import config, db, evaluator, email_service
+from scoreboard import config, db
 from scoreboard.hyperparams import compute_all_min_distances
 from scoreboard.scoring import compute_rank_score
 
@@ -159,4 +161,4 @@ async def scoreboard():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("scoreboard.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)

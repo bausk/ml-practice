@@ -2,7 +2,6 @@ import resend
 
 from scoreboard import config
 
-
 def send_pin_email(to_email: str, pin: str):
     """Send a PIN verification email via Resend."""
     resend.api_key = config.RESEND_API_KEY
