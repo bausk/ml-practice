@@ -18,6 +18,14 @@ document.addEventListener("DOMContentLoaded", () => {
         body.classList.toggle("collapsed");
         toggle.classList.toggle("open");
     });
+
+    $("modal-close").addEventListener("click", closeVideoModal);
+    $("video-modal").addEventListener("click", (e) => {
+        if (e.target === $("video-modal")) closeVideoModal();
+    });
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeVideoModal();
+    });
 });
 
 async function requestPin() {
@@ -177,6 +185,7 @@ function renderTable() {
             <th>Рейтинг</th>
             <th>Статус</th>
             <th>Схожість</th>
+            <th>Відео</th>
         </tr></thead><tbody>`;
 
     sorted.forEach((s, i) => {
@@ -187,6 +196,10 @@ function renderTable() {
         const statusBadge = `<span class="badge badge-${s.status}">${statusLabel(s.status)}</span>`;
         const dist = s.hyperparam_min_dist != null ? s.hyperparam_min_dist.toFixed(3) : "—";
 
+        const videoCell = s.has_video
+            ? `<td><button class="btn-video" onclick="openVideoModal(${s.id})">&#9654; Переглянути</button></td>`
+            : `<td>—</td>`;
+
         html += `<tr>
             <td>${rank}</td>
             <td>${escHtml(s.name)} ${escHtml(s.surname)}</td>
@@ -196,6 +209,7 @@ function renderTable() {
             <td><strong>${rankScore}</strong></td>
             <td>${statusBadge}</td>
             <td>${dist}</td>
+            ${videoCell}
         </tr>`;
     });
 
@@ -224,4 +238,20 @@ function escHtml(str) {
     const div = document.createElement("div");
     div.textContent = str;
     return div.innerHTML;
+}
+
+function openVideoModal(subId) {
+    const modal = $("video-modal");
+    const video = $("modal-video");
+    video.src = `/api/video/${subId}`;
+    modal.classList.remove("hidden");
+    video.play().catch(() => {});
+}
+
+function closeVideoModal() {
+    const modal = $("video-modal");
+    const video = $("modal-video");
+    modal.classList.add("hidden");
+    video.pause();
+    video.src = "";
 }

@@ -1,6 +1,7 @@
 import logging
 import queue
 import threading
+from pathlib import Path
 
 from scoreboard import db
 from scoreboard import config
@@ -33,6 +34,28 @@ def _evaluate_model(model_path: str, env_kwargs: dict, n_episodes: int) -> dict:
     return {"mean_reward": float(mean_reward), "std_reward": float(std_reward)}
 
 
+def _record_video(model_path: str, env_kwargs: dict, output_path: str, seed: int = 42) -> None:
+    """Record one deterministic episode as MP4. Requires imageio[ffmpeg]."""
+    import imageio
+    import gymnasium as gym
+    from stable_baselines3 import DQN
+
+    model = DQN.load(model_path)
+    env = gym.make("LunarLander-v3", render_mode="rgb_array", **env_kwargs)
+    frames = []
+    obs, _ = env.reset(seed=seed)
+    terminated, truncated = False, False
+    max_frames = 1500
+    while not (terminated or truncated) and len(frames) < max_frames:
+        frames.append(env.render())
+        action, _ = model.predict(obs, deterministic=True)
+        obs, _, terminated, truncated, _ = env.step(action)
+    frames.append(env.render())
+    env.close()
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    imageio.mimsave(output_path, frames, fps=30, macro_block_size=1)
+
+
 def _worker():
     """Background worker thread — processes one submission at a time."""
     while True:
@@ -62,6 +85,15 @@ def _worker():
                 individual_std=ind_result["std_reward"],
             )
             logger.info(f"Submission {sub_id} done: std={std_result['mean_reward']:.1f}, ind={ind_result['mean_reward']:.1f}")
+
+            # Record demo video for individual model (best-effort)
+            video_path = str(config.UPLOADS_DIR / str(sub_id) / "demo_individual.mp4")
+            try:
+                _record_video(sub["model_individual_path"], ind_params, video_path)
+                db.update_video_path(sub_id, video_path)
+                logger.info(f"Demo video saved for submission {sub_id}")
+            except Exception:
+                logger.exception(f"Video recording failed for submission {sub_id} (non-fatal)")
 
         except Exception as e:
             logger.exception(f"Evaluation failed for submission {sub_id}")

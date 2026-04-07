@@ -111,3 +111,34 @@ class TestSubmissions:
         pending = db.get_pending_submissions()
         assert len(pending) == 1
         assert pending[0]["status"] == "pending"
+
+
+class TestVideoPath:
+    def test_video_path_column_exists_after_init(self):
+        conn = db.get_conn()
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name='submissions' AND column_name='video_path'"
+            )
+            row = cur.fetchone()
+        assert row is not None, "video_path column should exist after init_db"
+
+    def test_update_video_path(self):
+        sub_id = db.create_submission(
+            email="a@lpnu.ua", name="A", surname="B", subgroup="ПЗ-33-1",
+            param_a=5, hyperparameters="{}", model_standard_path="/tmp/s.zip",
+            model_individual_path="/tmp/i.zip",
+        )
+        db.update_video_path(sub_id, "/uploads/1/demo_individual.mp4")
+        sub = db.get_submission(sub_id)
+        assert sub["video_path"] == "/uploads/1/demo_individual.mp4"
+
+    def test_update_video_path_none(self):
+        sub_id = db.create_submission(
+            email="b@lpnu.ua", name="C", surname="D", subgroup="ПЗ-33-1",
+            param_a=5, hyperparameters="{}", model_standard_path="/tmp/s.zip",
+            model_individual_path="/tmp/i.zip",
+        )
+        sub = db.get_submission(sub_id)
+        assert sub.get("video_path") is None
