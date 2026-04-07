@@ -152,5 +152,6 @@ tr:hover { background: #f8fafc; }
     padding: 3px 10px;
     cursor: pointer;
     font-size: 0.82rem;
+    margin-top: 0;
 }
 .btn-video:hover { background: #3a62b8; }

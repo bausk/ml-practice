@@ -1,6 +1,7 @@
 import logging
 import queue
 import threading
+from pathlib import Path
 
 from scoreboard import db
 from scoreboard import config
@@ -44,12 +45,14 @@ def _record_video(model_path: str, env_kwargs: dict, output_path: str, seed: int
     frames = []
     obs, _ = env.reset(seed=seed)
     terminated, truncated = False, False
-    while not (terminated or truncated):
+    max_frames = 1500
+    while not (terminated or truncated) and len(frames) < max_frames:
         frames.append(env.render())
         action, _ = model.predict(obs, deterministic=True)
         obs, _, terminated, truncated, _ = env.step(action)
     frames.append(env.render())
     env.close()
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     imageio.mimsave(output_path, frames, fps=30, macro_block_size=1)
 
 

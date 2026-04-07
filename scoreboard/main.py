@@ -128,10 +128,11 @@ async def upload(
 
     # Update file paths in DB
     conn = db.get_conn()
-    conn.execute(
-        "UPDATE submissions SET model_standard_path = ?, model_individual_path = ? WHERE id = ?",
-        (str(std_path), str(ind_path), sub_id),
-    )
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE submissions SET model_standard_path = %s, model_individual_path = %s WHERE id = %s",
+            (str(std_path), str(ind_path), sub_id),
+        )
     conn.commit()
 
     # Recompute hyperparameter distances for all active submissions
