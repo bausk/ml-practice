@@ -8,7 +8,7 @@ load_dotenv(Path(__file__).parent / ".env")
 RESEND_API_KEY: str = os.environ.get("RESEND_API_KEY", "")
 RESEND_FROM_EMAIL: str = os.environ.get("RESEND_FROM_EMAIL", "noreply@example.com")
 
-DATABASE_PATH: str = os.environ.get("DATABASE_PATH", "./scoreboard.db")
+DATABASE_URL: str = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/scoreboard")
 UPLOADS_DIR: Path = Path(os.environ.get("UPLOADS_DIR", "./uploads"))
 
 PIN_EXPIRY_MINUTES: int = int(os.environ.get("PIN_EXPIRY_MINUTES", "15"))

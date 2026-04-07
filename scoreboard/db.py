@@ -1,16 +1,19 @@
 import json
 import random
-import sqlite3
 import string
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlparse, urlunparse
+
+import psycopg2
+import psycopg2.extras
 
 from scoreboard import config
 
-_conn: sqlite3.Connection | None = None
+_conn: psycopg2.extensions.connection | None = None
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS pins (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    id          SERIAL PRIMARY KEY,
     email       TEXT NOT NULL,
     pin         TEXT NOT NULL,
     created_at  TEXT NOT NULL,
@@ -19,7 +22,7 @@ CREATE TABLE IF NOT EXISTS pins (
 );
 
 CREATE TABLE IF NOT EXISTS submissions (
-    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    id                    SERIAL PRIMARY KEY,
     email                 TEXT NOT NULL,
     name                  TEXT NOT NULL,
     surname               TEXT NOT NULL,
@@ -47,21 +50,52 @@ CREATE TABLE IF NOT EXISTS config (
 """
 
 
-def get_conn(db_path: str | None = None) -> sqlite3.Connection:
+def _db_name_from_url(url: str) -> str:
+    return urlparse(url).path.lstrip("/")
+
+
+def _server_url(url: str) -> str:
+    """Return connection URL pointing to the 'postgres' maintenance database."""
+    parsed = urlparse(url)
+    return urlunparse(parsed._replace(path="/postgres"))
+
+
+def _ensure_database_exists(url: str):
+    """Create the target database if it does not exist."""
+    db_name = _db_name_from_url(url)
+    server_url = _server_url(url)
+    conn = psycopg2.connect(server_url)
+    conn.autocommit = True
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (db_name,))
+        if cur.fetchone() is None:
+            cur.execute(f'CREATE DATABASE "{db_name}"')
+        cur.close()
+    finally:
+        conn.close()
+
+
+def get_conn(db_url: str | None = None) -> psycopg2.extensions.connection:
     global _conn
-    if _conn is None:
-        path = db_path or config.DATABASE_PATH
-        _conn = sqlite3.connect(path, check_same_thread=False)
-        _conn.row_factory = sqlite3.Row
-        _conn.execute("PRAGMA journal_mode=WAL")
+    if _conn is None or _conn.closed:
+        url = db_url or config.DATABASE_URL
+        _conn = psycopg2.connect(url, cursor_factory=psycopg2.extras.RealDictCursor)
+        _conn.autocommit = False
     return _conn
 
 
-def init_db(db_path: str | None = None):
+def init_db(db_url: str | None = None):
     global _conn
     _conn = None
-    conn = get_conn(db_path)
-    conn.executescript(SCHEMA)
+    url = db_url or config.DATABASE_URL
+    _ensure_database_exists(url)
+    conn = get_conn(url)
+    with conn.cursor() as cur:
+        for statement in SCHEMA.split(";"):
+            statement = statement.strip()
+            if statement:
+                cur.execute(statement)
     conn.commit()
 
 
@@ -76,105 +110,122 @@ def create_pin(email: str, expiry_minutes: int | None = None) -> str:
     now = datetime.now(timezone.utc)
     expires = now + timedelta(minutes=expiry_minutes)
     conn = get_conn()
-    conn.execute(
-        "INSERT INTO pins (email, pin, created_at, expires_at) VALUES (?, ?, ?, ?)",
-        (email, pin, now.isoformat(), expires.isoformat()),
-    )
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO pins (email, pin, created_at, expires_at) VALUES (%s, %s, %s, %s)",
+            (email, pin, now.isoformat(), expires.isoformat()),
+        )
     conn.commit()
     return pin
 
 
 def verify_pin(email: str, pin: str) -> bool:
     conn = get_conn()
-    row = conn.execute(
-        "SELECT id, expires_at FROM pins WHERE email = ? AND pin = ? AND used = 0 ORDER BY created_at DESC LIMIT 1",
-        (email, pin),
-    ).fetchone()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT id, expires_at FROM pins WHERE email = %s AND pin = %s AND used = 0 ORDER BY created_at DESC LIMIT 1",
+            (email, pin),
+        )
+        row = cur.fetchone()
     if row is None:
         return False
+    row = dict(row)  # type: ignore[arg-type]
     expires = datetime.fromisoformat(row["expires_at"])
     if datetime.now(timezone.utc) > expires:
         return False
-    conn.execute("UPDATE pins SET used = 1 WHERE id = ?", (row["id"],))
+    with conn.cursor() as cur:
+        cur.execute("UPDATE pins SET used = 1 WHERE id = %s", (row["id"],))
     conn.commit()
     return True
 
 
 def create_submission(email, name, surname, subgroup, param_a, hyperparameters, model_standard_path, model_individual_path) -> int:
     conn = get_conn()
-    cursor = conn.execute(
-        """INSERT INTO submissions
-        (email, name, surname, subgroup, param_a, hyperparameters,
-         model_standard_path, model_individual_path, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)""",
-        (email, name, surname, subgroup, param_a, hyperparameters,
-         model_standard_path, model_individual_path, _now_iso()),
-    )
-    new_id = cursor.lastrowid
-    conn.execute(
-        "UPDATE submissions SET superseded_by = ? WHERE email = ? AND id != ? AND superseded_by IS NULL",
-        (new_id, email, new_id),
-    )
+    with conn.cursor() as cur:
+        cur.execute(
+            """INSERT INTO submissions
+            (email, name, surname, subgroup, param_a, hyperparameters,
+             model_standard_path, model_individual_path, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'pending', %s)
+            RETURNING id""",
+            (email, name, surname, subgroup, param_a, hyperparameters,
+             model_standard_path, model_individual_path, _now_iso()),
+        )
+        new_id: int = dict(cur.fetchone())["id"]  # type: ignore[arg-type]
+        cur.execute(
+            "UPDATE submissions SET superseded_by = %s WHERE email = %s AND id != %s AND superseded_by IS NULL",
+            (new_id, email, new_id),
+        )
     conn.commit()
     return new_id
 
 
 def get_submission(sub_id: int) -> dict | None:
     conn = get_conn()
-    row = conn.execute("SELECT * FROM submissions WHERE id = ?", (sub_id,)).fetchone()
+    with conn.cursor() as cur:
+        cur.execute("SELECT * FROM submissions WHERE id = %s", (sub_id,))
+        row = cur.fetchone()
     return dict(row) if row else None
 
 
 def get_active_submissions() -> list[dict]:
     conn = get_conn()
-    rows = conn.execute(
-        "SELECT * FROM submissions WHERE superseded_by IS NULL ORDER BY created_at DESC"
-    ).fetchall()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT * FROM submissions WHERE superseded_by IS NULL ORDER BY created_at DESC"
+        )
+        rows = cur.fetchall()
     return [dict(r) for r in rows]
 
 
 def get_pending_submissions() -> list[dict]:
     conn = get_conn()
-    rows = conn.execute(
-        "SELECT * FROM submissions WHERE status IN ('pending', 'evaluating') AND superseded_by IS NULL ORDER BY created_at ASC"
-    ).fetchall()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT * FROM submissions WHERE status IN ('pending', 'evaluating') AND superseded_by IS NULL ORDER BY created_at ASC"
+        )
+        rows = cur.fetchall()
     return [dict(r) for r in rows]
 
 
 def set_status(sub_id: int, status: str):
     conn = get_conn()
-    conn.execute("UPDATE submissions SET status = ? WHERE id = ?", (status, sub_id))
+    with conn.cursor() as cur:
+        cur.execute("UPDATE submissions SET status = %s WHERE id = %s", (status, sub_id))
     conn.commit()
 
 
 def update_evaluation(sub_id: int, standard_mean: float, standard_std: float,
                       individual_mean: float, individual_std: float):
     conn = get_conn()
-    conn.execute(
-        """UPDATE submissions SET
-            standard_mean = ?, standard_std = ?,
-            individual_mean = ?, individual_std = ?,
-            status = 'done', evaluated_at = ?
-        WHERE id = ?""",
-        (standard_mean, standard_std, individual_mean, individual_std, _now_iso(), sub_id),
-    )
+    with conn.cursor() as cur:
+        cur.execute(
+            """UPDATE submissions SET
+                standard_mean = %s, standard_std = %s,
+                individual_mean = %s, individual_std = %s,
+                status = 'done', evaluated_at = %s
+            WHERE id = %s""",
+            (standard_mean, standard_std, individual_mean, individual_std, _now_iso(), sub_id),
+        )
     conn.commit()
 
 
 def update_evaluation_error(sub_id: int, error_message: str):
     conn = get_conn()
-    conn.execute(
-        "UPDATE submissions SET status = 'error', error_message = ?, evaluated_at = ? WHERE id = ?",
-        (error_message, _now_iso(), sub_id),
-    )
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE submissions SET status = 'error', error_message = %s, evaluated_at = %s WHERE id = %s",
+            (error_message, _now_iso(), sub_id),
+        )
     conn.commit()
 
 
 def update_hyperparam_distances(distances: dict[int, float | None]):
     conn = get_conn()
-    for sub_id, dist in distances.items():
-        conn.execute(
-            "UPDATE submissions SET hyperparam_min_dist = ? WHERE id = ?",
-            (dist, sub_id),
-        )
+    with conn.cursor() as cur:
+        for sub_id, dist in distances.items():
+            cur.execute(
+                "UPDATE submissions SET hyperparam_min_dist = %s WHERE id = %s",
+                (dist, sub_id),
+            )
     conn.commit()
