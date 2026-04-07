@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS submissions (
     error_message         TEXT,
     superseded_by         INTEGER,
     created_at            TEXT NOT NULL,
-    evaluated_at          TEXT
+    evaluated_at          TEXT,
+    video_path            TEXT
 );
 
 CREATE TABLE IF NOT EXISTS config (
@@ -96,6 +97,13 @@ def init_db(db_url: str | None = None):
             statement = statement.strip()
             if statement:
                 cur.execute(statement)
+    conn.commit()
+
+    # Migrations — idempotent
+    with conn.cursor() as cur:
+        cur.execute(
+            "ALTER TABLE submissions ADD COLUMN IF NOT EXISTS video_path TEXT"
+        )
     conn.commit()
 
 
@@ -216,6 +224,16 @@ def update_evaluation_error(sub_id: int, error_message: str):
         cur.execute(
             "UPDATE submissions SET status = 'error', error_message = %s, evaluated_at = %s WHERE id = %s",
             (error_message, _now_iso(), sub_id),
+        )
+    conn.commit()
+
+
+def update_video_path(sub_id: int, video_path: str):
+    conn = get_conn()
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE submissions SET video_path = %s WHERE id = %s",
+            (video_path, sub_id),
         )
     conn.commit()
 
