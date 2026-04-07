@@ -147,3 +147,57 @@ class TestScoreboard:
         data = resp.json()
         assert len(data["submissions"]) == 1
         assert data["submissions"][0]["name"] == "Олександр"
+
+
+class TestVideoEndpoint:
+    def test_video_not_found_when_no_video(self, monkeypatch):
+        monkeypatch.setattr("scoreboard.evaluator.enqueue", lambda sub_id: None)
+        pin = _get_pin(monkeypatch)
+        resp = client.post(
+            "/api/upload",
+            data={
+                "email": "student@lpnu.ua",
+                "pin": pin,
+                "name": "Олександр",
+                "surname": "Бауск",
+                "subgroup": "ПЗ-21",
+                "param_a": "21",
+                "hyperparameters": '{"learning_rate": 0.001}',
+            },
+            files={
+                "model_standard": ("m.zip", io.BytesIO(b"x"), "application/zip"),
+                "model_individual": ("m.zip", io.BytesIO(b"x"), "application/zip"),
+            },
+        )
+        sub_id = resp.json()["submission_id"]
+        video_resp = client.get(f"/api/video/{sub_id}")
+        assert video_resp.status_code == 404
+
+    def test_video_not_found_for_unknown_id(self):
+        resp = client.get("/api/video/99999")
+        assert resp.status_code == 404
+
+    def test_scoreboard_has_video_false_when_no_video(self, monkeypatch):
+        monkeypatch.setattr("scoreboard.evaluator.enqueue", lambda sub_id: None)
+        pin = _get_pin(monkeypatch)
+        upload_resp = client.post(
+            "/api/upload",
+            data={
+                "email": "student@lpnu.ua",
+                "pin": pin,
+                "name": "Олександр",
+                "surname": "Бауск",
+                "subgroup": "ПЗ-21",
+                "param_a": "21",
+                "hyperparameters": '{"learning_rate": 0.001}',
+            },
+            files={
+                "model_standard": ("m.zip", io.BytesIO(b"x"), "application/zip"),
+                "model_individual": ("m.zip", io.BytesIO(b"x"), "application/zip"),
+            },
+        )
+        sub_id = upload_resp.json()["submission_id"]
+        resp = client.get("/api/scoreboard")
+        data = resp.json()
+        submission = next(s for s in data["submissions"] if s["id"] == sub_id)
+        assert submission["has_video"] is False

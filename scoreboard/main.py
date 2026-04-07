@@ -152,11 +152,23 @@ async def scoreboard():
     # Attach rank_score
     for sub in active:
         sub["rank_score"] = compute_rank_score(sub)
+        sub["has_video"] = bool(sub.get("video_path"))
 
     return {
         "subgroups": config.SUBGROUPS,
         "submissions": active,
     }
+
+
+@app.get("/api/video/{sub_id}")
+async def get_video(sub_id: int):
+    sub = db.get_submission(sub_id)
+    if not sub or not sub.get("video_path"):
+        raise HTTPException(404, "Відео не знайдено")
+    path = Path(sub["video_path"])
+    if not path.exists():
+        raise HTTPException(404, "Файл відео не знайдено")
+    return FileResponse(str(path), media_type="video/mp4")
 
 
 if __name__ == "__main__":
