@@ -1,21 +1,27 @@
 import os
-import tempfile
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
-_tmp = tempfile.mktemp(suffix=".db")
-os.environ["DATABASE_PATH"] = _tmp
+TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL", "")
+
+if not TEST_DATABASE_URL:
+    pytest.skip("TEST_DATABASE_URL not set", allow_module_level=True)
+
+os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 
 from scoreboard import db
 
 
 @pytest.fixture(autouse=True)
 def fresh_db():
-    db.init_db(db_path=_tmp)
+    db.init_db(db_url=TEST_DATABASE_URL)
     yield
-    if os.path.exists(_tmp):
-        os.unlink(_tmp)
+    conn = db.get_conn()
+    with conn.cursor() as cur:
+        cur.execute("DROP TABLE IF EXISTS submissions, pins, config")
+    conn.commit()
+    db._conn = None
 
 
 class TestPins:
