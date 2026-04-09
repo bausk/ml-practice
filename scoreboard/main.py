@@ -148,16 +148,16 @@ async def upload(
 
 @app.get("/api/scoreboard")
 async def scoreboard():
-    active = db.get_active_submissions()
+    all_subs = db.get_all_submissions()
 
     # Attach rank_score
-    for sub in active:
+    for sub in all_subs:
         sub["rank_score"] = compute_rank_score(sub)
         sub["has_video"] = bool(sub.get("video_path"))
 
     return {
         "subgroups": config.SUBGROUPS,
-        "submissions": active,
+        "submissions": all_subs,
     }
 
 

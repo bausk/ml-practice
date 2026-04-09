@@ -5,16 +5,19 @@ import math
 def compute_all_min_distances(submissions: list[dict]) -> dict[int, float | None]:
     """
     Compute the minimum Euclidean distance (on min-max normalized hyperparameters)
-    from each submission to every other submission.
+    from each submission to every submission from a *different* student (email).
+    Same-student submissions are excluded to avoid self-comparison in plagiarism detection.
 
     Args:
-        submissions: list of dicts with keys 'id' and 'hyperparameters' (JSON string).
+        submissions: list of dicts with keys 'id', 'email', and 'hyperparameters' (JSON string).
 
     Returns:
-        dict mapping submission id -> min distance (None if only one submission).
+        dict mapping submission id -> min distance (None if no other-student submissions exist).
     """
     if len(submissions) < 2:
         return {s["id"]: None for s in submissions}
+
+    email_by_id: dict[int, str] = {s["id"]: s["email"] for s in submissions}
 
     parsed = []
     all_keys: set[str] = set()
@@ -46,16 +49,16 @@ def compute_all_min_distances(submissions: list[dict]) -> dict[int, float | None
 
     ids = list(normalized.keys())
     result: dict[int, float | None] = {}
-    for i, id_a in enumerate(ids):
+    for id_a in ids:
         min_dist = float("inf")
-        for j, id_b in enumerate(ids):
-            if i == j:
+        for id_b in ids:
+            if email_by_id[id_a] == email_by_id[id_b]:
                 continue
             dist = math.sqrt(sum(
                 (normalized[id_a][d] - normalized[id_b][d]) ** 2
                 for d in range(n_dims)
             ))
             min_dist = min(min_dist, dist)
-        result[id_a] = min_dist
+        result[id_a] = min_dist if min_dist < float("inf") else None
 
     return result

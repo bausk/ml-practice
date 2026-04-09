@@ -168,7 +168,31 @@ function renderTable() {
         ? submissions.filter((s) => s.subgroup === activeTab)
         : submissions;
 
-    const sorted = [...filtered].sort((a, b) => (b.rank_score ?? -Infinity) - (a.rank_score ?? -Infinity));
+    // Group all submissions by email
+    const byEmail = new Map();
+    filtered.forEach((s) => {
+        if (!byEmail.has(s.email)) byEmail.set(s.email, []);
+        byEmail.get(s.email).push(s);
+    });
+
+    // For each student pick the best submission to display
+    const displayRows = [];
+    byEmail.forEach((group) => {
+        // Sort chronologically ascending to determine attempt order
+        const chronological = [...group].sort((a, b) => a.created_at.localeCompare(b.created_at));
+        const total = chronological.length;
+
+        // Best = highest rank_score among done submissions; fallback to most recent
+        const done = chronological.filter((s) => s.status === "done");
+        const best = done.length > 0
+            ? done.reduce((a, b) => (b.rank_score ?? -Infinity) > (a.rank_score ?? -Infinity) ? b : a)
+            : chronological[chronological.length - 1];
+
+        const attemptNumber = chronological.findIndex((s) => s.id === best.id) + 1;
+        displayRows.push({ ...best, _attempt_number: attemptNumber, _total_attempts: total });
+    });
+
+    const sorted = displayRows.sort((a, b) => (b.rank_score ?? -Infinity) - (a.rank_score ?? -Infinity));
 
     if (sorted.length === 0) {
         $("scoreboard-content").innerHTML = "<p>Немає результатів</p>";
@@ -184,6 +208,7 @@ function renderTable() {
             <th>Індивід.</th>
             <th>Рейтинг</th>
             <th>Статус</th>
+            <th>Спроби</th>
             <th>Схожість</th>
             <th>Відео</th>
         </tr></thead><tbody>`;
@@ -195,6 +220,10 @@ function renderTable() {
         const rankScore = s.rank_score != null ? s.rank_score.toFixed(1) : "—";
         const statusBadge = `<span class="badge badge-${s.status}">${statusLabel(s.status)}</span>`;
         const dist = s.hyperparam_min_dist != null ? s.hyperparam_min_dist.toFixed(3) : "—";
+
+        const attemptLabel = s._total_attempts > 1
+            ? `#${s._attempt_number} з ${s._total_attempts} · ${formatDateTime(s.created_at)}`
+            : formatDateTime(s.created_at);
 
         const videoCell = s.has_video
             ? `<td><button class="btn-video" onclick="openVideoModal(${s.id})">&#9654; Переглянути</button></td>`
@@ -208,6 +237,7 @@ function renderTable() {
             <td class="${scoreClass(s.individual_mean)}">${indScore}</td>
             <td><strong>${rankScore}</strong></td>
             <td>${statusBadge}</td>
+            <td style="white-space:nowrap;font-size:0.85em">${escHtml(attemptLabel)}</td>
             <td>${dist}</td>
             ${videoCell}
         </tr>`;
@@ -215,6 +245,16 @@ function renderTable() {
 
     html += "</tbody></table>";
     $("scoreboard-content").innerHTML = html;
+}
+
+function formatDateTime(isoStr) {
+    if (!isoStr) return "—";
+    const d = new Date(isoStr);
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    return `${dd}.${mm} ${hh}:${min}`;
 }
 
 function formatScore(val) {

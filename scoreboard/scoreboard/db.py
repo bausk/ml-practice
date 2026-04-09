@@ -176,6 +176,16 @@ def get_submission(sub_id: int) -> dict | None:
     return dict(row) if row else None
 
 
+def get_all_submissions() -> list[dict]:
+    conn = get_conn()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT * FROM submissions ORDER BY created_at DESC"
+        )
+        rows = cur.fetchall()
+    return [dict(r) for r in rows]
+
+
 def get_active_submissions() -> list[dict]:
     conn = get_conn()
     with conn.cursor() as cur:
