@@ -3,7 +3,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).parent / ".env")
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 RESEND_API_KEY: str = os.environ.get("RESEND_API_KEY", "")
 RESEND_FROM_EMAIL: str = os.environ.get("RESEND_FROM_EMAIL", "noreply@example.com")
