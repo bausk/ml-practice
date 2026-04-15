@@ -13,12 +13,15 @@ _queue: queue.Queue[int] = queue.Queue()
 
 def compute_individual_params(A: int) -> dict:
     """Compute individual environment parameters from student parameter A."""
-    return {
+    params = {
         "gravity": -10.0 + (A % 5) * (-0.5),
         "enable_wind": A > 15,
         "wind_power": (A % 10) * 1.5,
         "turbulence_power": (A % 7) * 0.25,
     }
+    if params['gravity'] >= 12.0:
+        params['gravity'] = 11.98
+    return params
 
 
 def _evaluate_model(model_path: str, env_kwargs: dict, n_episodes: int) -> dict:
