@@ -57,6 +57,15 @@ async def request_pin(req: PinRequest):
     if not email.endswith("@lpnu.ua"):
         raise HTTPException(400, "Дозволені лише адреси @lpnu.ua")
 
+    in_cooldown, remaining = db.check_cooldown(email)
+    if in_cooldown:
+        minutes = remaining // 60
+        seconds = remaining % 60
+        raise HTTPException(
+            429,
+            f"Зачекайте {minutes} хв {seconds} сек перед наступним завантаженням",
+        )
+
     pin = db.create_pin(email)
     email_service.send_pin_email(email, pin)
     return {"ok": True, "message": "PIN надіслано на вашу пошту"}
@@ -79,6 +88,16 @@ async def upload(
     # Validate email
     if not email.endswith("@lpnu.ua"):
         raise HTTPException(400, "Дозволені лише адреси @lpnu.ua")
+
+    # Check cooldown
+    in_cooldown, remaining = db.check_cooldown(email)
+    if in_cooldown:
+        minutes = remaining // 60
+        seconds = remaining % 60
+        raise HTTPException(
+            429,
+            f"Зачекайте {minutes} хв {seconds} сек перед наступним завантаженням",
+        )
 
     # Validate PIN
     if not db.verify_pin(email, pin):

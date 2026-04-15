@@ -53,6 +53,9 @@ async function requestPin() {
             status.textContent = "PIN надіслано на вашу пошту!";
             status.className = "status ok";
             $("step-upload").classList.remove("hidden");
+        } else if (resp.status === 429) {
+            status.textContent = data.detail || "Зачекайте перед наступним завантаженням";
+            status.className = "status warn";
         } else {
             status.textContent = data.detail || "Помилка";
             status.className = "status err";
@@ -103,6 +106,9 @@ async function uploadSubmission() {
             status.textContent = "Модель завантажено! Оцінка розпочнеться автоматично.";
             status.className = "status ok";
             loadScoreboard();
+        } else if (resp.status === 429) {
+            status.textContent = data.detail || "Зачекайте перед наступним завантаженням";
+            status.className = "status warn";
         } else {
             status.textContent = data.detail || "Помилка завантаження";
             status.className = "status err";

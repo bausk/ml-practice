@@ -280,6 +280,7 @@ input[type="file"] {
 }
 .status.ok { color: #16a34a; }
 .status.err { color: #dc2626; }
+.status.warn { color: #b45309; }
 
 /* ── Collapsible ── */
 .collapsible {

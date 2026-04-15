@@ -15,6 +15,7 @@ PIN_EXPIRY_MINUTES: int = int(os.environ.get("PIN_EXPIRY_MINUTES", "15"))
 EVALUATION_EPISODES: int = int(os.environ.get("EVALUATION_EPISODES", "100"))
 
 MAX_FILE_SIZE_MB: int = 50
+UPLOAD_COOLDOWN_MINUTES: int = int(os.environ.get("UPLOAD_COOLDOWN_MINUTES", "20"))
 
 # Editable list of active subgroups.
 # Students can only select from this list for new uploads.

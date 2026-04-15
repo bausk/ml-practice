@@ -147,6 +147,29 @@ def verify_pin(email: str, pin: str) -> bool:
     return True
 
 
+def check_cooldown(email: str) -> tuple[bool, int]:
+    """Check if the email is in a cooldown period after a submission.
+
+    Returns (is_in_cooldown, remaining_seconds).
+    """
+    conn = get_conn()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT created_at FROM submissions WHERE email = %s ORDER BY created_at DESC LIMIT 1",
+            (email,),
+        )
+        row = cur.fetchone()
+    if row is None:
+        return False, 0
+    last_submission = datetime.fromisoformat(dict(row)["created_at"])  # type: ignore[arg-type]
+    cooldown_end = last_submission + timedelta(minutes=config.UPLOAD_COOLDOWN_MINUTES)
+    now = datetime.now(timezone.utc)
+    if now < cooldown_end:
+        remaining = int((cooldown_end - now).total_seconds())
+        return True, remaining
+    return False, 0
+
+
 def create_submission(email, name, surname, subgroup, param_a, hyperparameters, model_standard_path, model_individual_path) -> int:
     conn = get_conn()
     with conn.cursor() as cur:

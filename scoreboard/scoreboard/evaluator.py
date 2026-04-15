@@ -19,8 +19,8 @@ def compute_individual_params(A: int) -> dict:
         "wind_power": (A % 10) * 1.5,
         "turbulence_power": (A % 7) * 0.25,
     }
-    if params['gravity'] >= 12.0:
-        params['gravity'] = 11.98
+    if params['gravity'] <= -11.98:
+        params['gravity'] = -11.98
     return params
 
 
